@@ -26,27 +26,27 @@ let decorations = [];
 let drinks = {
     "美式咖啡": {
         requiredIngredients: { coffee: 2, sugar: 1 },
-        sellPrice: 60
+        sellPrice: 65
     },
     "拿鐵": {
         requiredIngredients: { coffee: 1, milk: 2, sugar: 1 },
-        sellPrice: 80
+        sellPrice: 85
     },
     "卡布奇諾": {
         requiredIngredients: { coffee: 1, milk: 1, sugar: 1 },
-        sellPrice: 90
+        sellPrice: 75
     },
     "摩卡": {
         requiredIngredients: { coffee: 1, milk: 1, cocoa: 1, sugar: 1 },
-        sellPrice: 100
+        sellPrice: 95
     },
     "冰咖啡": {
         requiredIngredients: { coffee: 2, sugar: 1, ice: 2 },
-        sellPrice: 70
+        sellPrice: 80
     },
     "巧克力咖啡": {
         requiredIngredients: { coffee: 1, milk: 1, chocolate_syrup: 1 },
-        sellPrice: 110
+        sellPrice: 90
     }
 };
 

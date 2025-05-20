@@ -75,5 +75,5 @@ function getBuildingName(type) {
 }
 
 // 自動放置收益，每5秒自動執行一次 nextTick
-setInterval(nextTick, 5000);
+setInterval(nextTick, 1000);
 update();

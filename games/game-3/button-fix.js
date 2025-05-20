@@ -27,8 +27,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買咖啡按鈕
     document.getElementById('buy-coffee').addEventListener('click', function() {
-        if (money >= 5) {
-            money -= 5;
+        if (money >= 10) {
+            money -= 10;
             ingredients.coffee += 1;
             updateMoney();
             updateIngredients();
@@ -41,8 +41,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買牛奶按鈕
     document.getElementById('buy-milk').addEventListener('click', function() {
-        if (money >= 3) {
-            money -= 3;
+        if (money >= 8) {
+            money -= 8;
             ingredients.milk += 1;
             updateMoney();
             updateIngredients();
@@ -55,8 +55,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買糖按鈕
     document.getElementById('buy-sugar').addEventListener('click', function() {
-        if (money >= 2) {
-            money -= 2;
+        if (money >= 5) {
+            money -= 5;
             ingredients.sugar += 1;
             updateMoney();
             updateIngredients();
@@ -69,8 +69,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買可可按鈕
     document.getElementById('buy-cocoa').addEventListener('click', function() {
-        if (money >= 3) {
-            money -= 3;
+        if (money >= 10) {
+            money -= 10;
             ingredients.cocoa += 1;
             updateMoney();
             updateIngredients();
@@ -83,8 +83,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買冰塊按鈕
     document.getElementById('buy-ice').addEventListener('click', function() {
-        if (money >= 2) {
-            money -= 2;
+        if (money >= 5) {
+            money -= 5;
             ingredients.ice += 1;
             updateMoney();
             updateIngredients();
@@ -97,8 +97,8 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // 購買巧克力醬按鈕
     document.getElementById('buy-chocolate-syrup').addEventListener('click', function() {
-        if (money >= 3) {
-            money -= 3;
+        if (money >= 12) {
+            money -= 12;
             ingredients.chocolate_syrup += 1;
             updateMoney();
             updateIngredients();

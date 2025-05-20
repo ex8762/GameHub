@@ -465,7 +465,7 @@ function updateGame() {
     }
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     if (moveLeft && player.x > 0) player.x -= player.speed;
-    if (moveRight && player.x + player.width < WIDTH) player.x += player.speed;
+    if (moveRight && player.x < WIDTH - player.width) player.x += player.speed;
     drawBackground();
     drawPlayer();
     drawBullets();
