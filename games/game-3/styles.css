@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Microsoft JhengHei', sans-serif;
+    background-color: #EFEBE9;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    grid-template-rows: 3fr 1fr;
+    gap: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#cafe-view {
+    grid-column: 1;
+    grid-row: 1;
+    background-color: #D7CCC8;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#menu-panel {
+    grid-column: 2;
+    grid-row: 1;
+    background-color: #BCAAA4;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#customer-panel {
+    grid-column: 1;
+    grid-row: 2;
+    background-color: #A1887F;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#stats-panel {
+    grid-column: 2;
+    grid-row: 2;
+    background-color: #8D6E63;
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#money, #reputation {
+    font-size: 1.2em;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
+}

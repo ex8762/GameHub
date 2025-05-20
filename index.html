@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -49,30 +10,106 @@
     <header>
         <nav>
             <h1>🎮 我的遊戲列表</h1>
+            <p style="margin:0 0 10px 0;font-size:1.1rem;color:#b2dfdb;">歡迎來到我的遊戲專區，體驗不同類型的趣味遊戲！</p>
             <ul>
                 <li><a href="#shooting-game">簡易射擊遊戲</a></li>
                 <li><a href="#simulation-game">模擬經營遊戲</a></li>
+                <li><a href="#cafe-game">咖啡廳經營遊戲</a></li>
             </ul>
         </nav>
     </header>
     <main>
         <section id="shooting-game">
-            <h2>簡易射擊遊戲</h2>
+            <h2>簡易射擊遊戲 <span style="font-size:1rem;color:#388E3C;vertical-align:middle;">(動作射擊)</span></h2>
             <div class="game-preview">
-                <p>遊戲預覽圖即將上傳</p>
+                <div class="game-screenshot">
+                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="300" height="200" fill="#111" />
+                        <!-- 玩家飛機 -->
+                        <polygon points="150,170 125,190 175,190" fill="#4CAF50" />
+                        <!-- 敵人 -->
+                        <rect x="80" y="30" width="30" height="30" fill="#F44336" />
+                        <rect x="150" y="50" width="30" height="30" fill="#F44336" />
+                        <rect x="220" y="40" width="30" height="30" fill="#F44336" />
+                        <!-- 子彈 -->
+                        <rect x="148" y="120" width="4" height="10" fill="#FFEB3B" />
+                        <rect x="148" y="90" width="4" height="10" fill="#FFEB3B" />
+                    </svg>
+                </div>
+                <a href="games/game-1/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
             </div>
-            <p>這是一款簡易的射擊遊戲，玩家需要擊敗敵人並獲得高分。</p>
+            <p style="font-weight:bold;color:#388E3C;">玩法提示：使用方向鍵移動飛機，空白鍵發射子彈，擊敗敵人獲得高分！</p>
+            <ul>
+                <li>簡單易上手的操作</li>
+                <li>精美的視覺效果</li>
+                <li>刺激的遊戲體驗</li>
+            </ul>
         </section>
         <section id="simulation-game">
-            <h2>模擬經營遊戲</h2>
+            <h2>模擬經營遊戲 <span style="font-size:1rem;color:#1976D2;vertical-align:middle;">(策略模擬)</span></h2>
             <div class="game-preview">
-                <p>遊戲預覽圖即將上傳</p>
+                <div class="game-screenshot">
+                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="300" height="200" fill="#E3F2FD" />
+                        <!-- 建築物 -->
+                        <rect x="50" y="80" width="60" height="120" fill="#90CAF9" />
+                        <rect x="120" y="100" width="80" height="100" fill="#42A5F5" />
+                        <rect x="210" y="70" width="50" height="130" fill="#1E88E5" />
+                        <!-- 道路 -->
+                        <rect x="0" y="180" width="300" height="20" fill="#455A64" />
+                        <!-- 車輛 -->
+                        <rect x="70" y="165" width="30" height="15" fill="#FF9800" />
+                        <rect x="180" y="165" width="30" height="15" fill="#4CAF50" />
+                    </svg>
+                </div>
+                <a href="games/game-2/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
             </div>
-            <p>在這款模擬經營遊戲中，玩家可以體驗經營自己的虛擬企業。</p>
+            <p style="font-weight:bold;color:#1976D2;">玩法提示：建設城市、發展經濟，打造屬於你的企業王國！</p>
+            <ul>
+                <li>豐富的建築選擇</li>
+                <li>複雜的經濟系統</li>
+                <li>多樣化的發展路線</li>
+            </ul>
+        </section>
+        <section id="cafe-game">
+            <h2>咖啡廳經營遊戲 <span style="font-size:1rem;color:#795548;vertical-align:middle;">(模擬經營)</span></h2>
+            <div class="game-preview">
+                <div class="game-screenshot">
+                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="300" height="200" fill="#EFEBE9" />
+                        <!-- 咖啡廳內部 -->
+                        <rect x="20" y="40" width="260" height="140" fill="#D7CCC8" />
+                        <!-- 櫃檯 -->
+                        <rect x="30" y="50" width="80" height="20" fill="#8D6E63" />
+                        <!-- 桌子 -->
+                        <rect x="130" y="60" width="30" height="30" fill="#A1887F" />
+                        <rect x="190" y="60" width="30" height="30" fill="#A1887F" />
+                        <rect x="130" y="120" width="30" height="30" fill="#A1887F" />
+                        <rect x="190" y="120" width="30" height="30" fill="#A1887F" />
+                        <!-- 裝飾 -->
+                        <rect x="40" y="90" width="20" height="80" fill="#6D4C41" />
+                        <circle cx="145" cy="75" r="8" fill="#BCAAA4" />
+                        <circle cx="205" cy="75" r="8" fill="#BCAAA4" />
+                        <circle cx="145" cy="135" r="8" fill="#BCAAA4" />
+                        <circle cx="205" cy="135" r="8" fill="#BCAAA4" />
+                    </svg>
+                </div>
+                <a href="games/game-3/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
+            </div>
+            <p style="font-weight:bold;color:#795548;">玩法提示：經營你的夢想咖啡廳，製作美味飲品，服務顧客，提升店鋪等級！</p>
+            <ul>
+                <li>多樣化的咖啡製作</li>
+                <li>店鋪裝潢與升級</li>
+                <li>顧客互動系統</li>
+            </ul>
         </section>
     </main>
     <footer>
         <p>&copy; 2025 我的遊戲列表. All rights reserved.</p>
+        <div style="margin-top:8px;">
+            <a href="https://github.com/ex8762" target="_blank" style="color:#90caf9;margin:0 8px;text-decoration:none;">GitHub</a> |
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=ex8762@gmail.com" style="color:#ffb74d;margin:0 8px;text-decoration:none;">聯絡作者</a>
+        </div>
     </footer>
 </body>
 </html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模擬經營遊戲 - 小小商店</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>城市經營大亨</h1>
+        <div class="stats">
+            <span>金錢：<span id="money">1000</span></span>
+            <span>人口：<span id="population">0</span></span>
+            <span>城市等級：<span id="level">1</span></span>
+        </div>
+        <div class="resources">
+        </div>
+        <div class="game-guide">
+            <h2>遊戲指引</h2>
+            <p>歡迎來到城市經營大亨！</p>
+            <ul>
+                <li>點擊「建造」按鈕來建造新的建築物。</li>
+                <li>點擊「升級」按鈕來提升建築物的等級，增加產出。</li>
+                <li>「收取收益」按鈕可以立即獲得所有商業區、工廠和發電廠的產出。</li>
+                <li>「等待一段時間」會模擬時間流逝，自動收取一次收益。</li>
+                <li>注意你的金錢、人口、能源和工業品儲備，合理規劃城市發展！</li>
+            </ul>
+            <span>能源：<span id="energy">0</span></span>
+            <span>工業品：<span id="industry">0</span></span>
+        </div>
+        <div class="buildings">
+            <h2>建築列表</h2>
+            <div class="building-row">
+                <span>住宅區</span>
+                <span>數量：<span id="house-count">0</span></span>
+                <button onclick="build('house')">建造（$100）</button>
+                <button onclick="upgradeBuilding('house')">升級</button>
+            </div>
+            <div class="building-row">
+                <span>商業區</span>
+                <span>數量：<span id="shop-count">0</span></span>
+                <button onclick="build('shop')">建造（$300）</button>
+                <button onclick="upgradeBuilding('shop')">升級</button>
+            </div>
+            <div class="building-row">
+                <span>工廠</span>
+                <span>數量：<span id="factory-count">0</span></span>
+                <button onclick="build('factory')">建造（$500）</button>
+                <button onclick="upgradeBuilding('factory')">升級</button>
+            </div>
+            <div class="building-row">
+                <span>發電廠</span>
+                <span>數量：<span id="powerplant-count">0</span></span>
+                <button onclick="build('powerplant')">建造（$400）</button>
+                <button onclick="upgradeBuilding('powerplant')">升級</button>
+            </div>
+        </div>
+        <div class="actions">
+        </div>
+        <div class="log" id="log">歡迎來到城市經營大亨！建設你的城市，享受自動化經營的樂趣。</div>
+    </div>
+    <script src="script.js"></script>
+    <script src="button-fix.js"></script>
+</body>
+</html>

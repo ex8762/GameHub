@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咖啡廳經營遊戲</title>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', Arial, sans-serif;
+            background-color: #f5e8d3;
+            background-image: linear-gradient(to bottom right, #f5e8d3, #e6ccb2);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container {
+            width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.2);
+            transition: all 0.3s ease;
+        }
+        #cafe-view {
+            width: 800px;
+            height: 400px;
+            background-image: url('images/cafe-background.jpg');
+            background-size: cover;
+            position: relative;
+            border: 2px solid #8b4513;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: background-image 0.5s ease;
+        }
+        .decor-spot {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+        }
+        #spot1 { top: 50px; left: 50px; }
+        #spot2 { top: 50px; left: 150px; }
+        #spot3 { top: 150px; left: 50px; }
+        #menu {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #menu button {
+            padding: 12px 24px;
+            margin: 0 10px;
+            background-color: #d2b48c;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #menu button:hover {
+            background-color: #8b4513;
+            color: white;
+        }
+        #status-bar {
+            text-align: center;
+            padding: 10px;
+            background-color: #deb887;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #shop-panel, 
+        #staff-panel, 
+        #decor-panel, 
+        #missions-panel, 
+        #pending-orders-panel {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 300px;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            display: none;
+            z-index: 10;
+        }
+        #permanent-mix-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            z-index: 20;
+        }
+        #recipe-panel {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            width: 280px;
+            background-color: #fff;
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 30;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: none;
+        }
+        #recipe-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        #toggle-recipe-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 40;
+            padding: 8px 15px;
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        #toggle-recipe-button:hover {
+            background-color: #a0522d;
+            transform: translateY(-2px);
+        }
+        #notification {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffeb3b;
+            color: #000;
+            padding: 10px 20px;
+            border: 1px solid #8b4513;
+            border-radius: 5px;
+            display: none;
+            z-index: 50;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        label {
+            margin-right: 10px;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+        }
+        @keyframes makeDrink {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .making-drink {
+            animation: makeDrink 2s ease-in-out;
+        }
+        @keyframes orderComplete {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        .order-complete {
+            animation: orderComplete 1s ease-out;
+        }
+        @keyframes buttonClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        .button-click {
+            animation: buttonClick 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <audio id="background-music" loop>
+        <source src="sounds/cafe-ambience.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="order-complete-sound">
+        <source src="sounds/order-complete.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="new-order-sound">
+        <source src="sounds/new-order.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="level-up-sound">
+        <source src="sounds/level-up.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="cash-sound">
+        <source src="sounds/cash.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="drink-making-sound">
+        <source src="sounds/drink-making.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="notification"></div>
+    <button id="toggle-recipe-button" onclick="toggleRecipePanel()">食譜</button>
+    <div id="recipe-panel">
+        <button class="close-button" onclick="toggleRecipePanel()" style="float:right;">X</button>
+        <h2>食譜</h2>
+        <ul id="recipe-list"></ul>
+    </div>
+
+    <div id="game-container">
+        <h1 style="text-align: center; color: #8b4513;">歡迎來到咖啡館經營遊戲</h1>
+        <p style="text-align: center; color: #666;">
+            目標：管理咖啡館，完成任務升級，打造夢想店面！
+        </p>
+        <div id="cafe-view">
+            <div class="decor-spot" id="spot1"></div>
+            <div class="decor-spot" id="spot2"></div>
+            <div class="decor-spot" id="spot3"></div>
+        </div>
+        <div id="menu">
+            <button id="shop-button">商店</button>
+            <button id="staff-button">員工</button>
+            <button id="decor-button">裝飾</button>
+            <button id="missions-button">任務</button>
+            <button id="pending-orders-button">待處理訂單</button>
+        </div>
+        <div id="status-bar">
+            金錢: <span id="money">100</span> | 等級: <span id="level">1</span>
+        </div>
+    </div>
+
+    <div id="shop-panel">
+        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
+        <h2>商店</h2>
+        <p>這裡可以購買食材。</p>
+        <div>
+            <label>咖啡 - 5元</label>
+            <button id="buy-coffee">購買</button>
+        </div>
+        <div>
+            <label>牛奶 - 3元</label>
+            <button id="buy-milk">購買</button>
+        </div>
+        <div>
+            <label>糖 - 2元</label>
+            <button id="buy-sugar">購買</button>
+        </div>
+        <div>
+            <label>可可 - 3元</label>
+            <button id="buy-cocoa">購買</button>
+        </div>
+        <div>
+            <label>冰塊 - 2元</label>
+            <button id="buy-ice">購買</button>
+        </div>
+        <div>
+            <label>巧克力醬 - 3元</label>
+            <button id="buy-chocolate-syrup">購買</button>
+        </div>
+
+        <h3>目前物資</h3>
+        <p>咖啡: <span id="coffee-count"></span></p>
+        <p>牛奶: <span id="milk-count"></span></p>
+        <p>糖: <span id="sugar-count"></span></p>
+        <p>可可: <span id="cocoa-count"></span></p>
+        <p>冰塊: <span id="ice-count"></span></p>
+        <p>巧克力醬: <span id="chocolate-syrup-count">0</span></p>
+    </div>
+
+    <div id="staff-panel">
+        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
+        <h2>員工管理</h2>
+        <p>員工效果：每秒每位員工增加1金錢。</p>
+        <button id="hire-staff">招聘員工（100元）</button>
+        <ul id="staff-list"></ul>
+    </div>
+
+    <div id="decor-panel">
+        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
+        <h2>裝飾</h2>
+        <p>裝飾店面吸引更多顧客，完成任務可獲獎勵。</p>
+        <div>
+            <label>桌子 - 50元</label>
+            <button id="buy-table-decor">購買</button>
+        </div>
+        <div>
+            <label>植物 - 30元</label>
+            <button id="buy-plant-decor">購買</button>
+        </div>
+        <div>
+            <label>藝術畫 - 80元</label>
+            <button id="buy-art-decor">購買</button>
+        </div>
+    </div>
+
+    <div id="missions-panel">
+        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
+        <h2>任務清單</h2>
+        <p>完成任務可獲金錢或經驗值，幫助升級。</p>
+        <ul id="missions-list"></ul>
+    </div>
+
+    <div id="pending-orders-panel">
+        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
+        <h2>待處理訂單</h2>
+        <ul id="pending-orders-list"></ul>
+    </div>
+
+    <div id="permanent-mix-panel">
+        <h2>調配飲品</h2>
+        <p>請根據訂單選擇正確食材，或自行嘗試調配。</p>
+        <p>所需飲品: <span id="permanent-required-drink">無</span></p>
+        <form id="permanent-mix-form">
+            <label>咖啡:</label>
+            <input type="number" id="permanent-coffee-input" min="0" max="99" value="0">
+            <label>牛奶:</label>
+            <input type="number" id="permanent-milk-input" min="0" max="99" value="0">
+            <label>糖:</label>
+            <input type="number" id="permanent-sugar-input" min="0" max="99" value="0">
+            <label>可可:</label>
+            <input type="number" id="permanent-cocoa-input" min="0" max="99" value="0">
+            <label>冰塊:</label>
+            <input type="number" id="permanent-ice-input" min="0" max="99" value="0">
+            <label>巧克力醬:</label>
+            <input type="number" id="permanent-chocolate-syrup-input" min="0" max="99" value="0">
+            <button id="permanent-make-button" type="button">製作</button>
+        </form>
+    </div>
+
+    <script src="game-functions.js"></script>
+    <script src="script.js"></script>
+    <script src="init-vars.js"></script>
+    <script src="button-fix.js"></script>
+</body>
+</html>
