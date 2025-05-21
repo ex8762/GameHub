@@ -1,0 +1,885 @@
+body {
+    font-family: 'Microsoft JhengHei', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
+
+.container {
+    flex: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    margin-left: 240px;
+    /* 為左側面板留出空間 */
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #1976d2;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+/* 遊戲說明按鈕 */
+
+.help-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s;
+    z-index: 100;
+}
+
+.help-btn:hover {
+    background-color: #1565c0;
+}
+
+
+/* 遊戲說明面板 */
+
+.help-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 80%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.help-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.help-panel h2 {
+    color: #1976d2;
+    margin-top: 0;
+    border-bottom: 2px solid #1976d2;
+    padding-bottom: 10px;
+}
+
+.help-content {
+    margin: 20px 0;
+}
+
+.help-content h3 {
+    color: #333;
+    margin: 15px 0 10px;
+}
+
+.help-content ul {
+    padding-left: 20px;
+}
+
+.help-content li {
+    margin: 5px 0;
+    line-height: 1.5;
+}
+
+.close-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.close-btn:hover {
+    background-color: #c82333;
+}
+
+
+/* 建築物提示 */
+
+.building-info {
+    flex: 1;
+    position: relative;
+}
+
+.building-tooltip {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+    width: 200px;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+}
+
+.building-info:hover .building-tooltip {
+    display: block;
+}
+
+.building-tooltip p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+
+/* 其他現有樣式 */
+
+.stats,
+.resources {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.stats span,
+.resources span {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #1976d2;
+}
+
+.buildings {
+    margin: 20px 0;
+}
+
+.building-row {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.building-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.building-row span {
+    flex: 1;
+}
+
+button {
+    padding: 8px 16px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+button:not(:disabled) {
+    background-color: #1976d2;
+    color: white;
+}
+
+button:not(:disabled):hover {
+    background-color: #1565c0;
+    transform: scale(1.05);
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.upgrade {
+    background-color: #4caf50;
+}
+
+.upgrade:hover:not(:disabled) {
+    background-color: #388e3c;
+}
+
+.log {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+
+/* 響應式設計 */
+
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+    .building-row {
+        flex-direction: column;
+        text-align: center;
+    }
+    .building-info {
+        margin-bottom: 10px;
+    }
+    .stats,
+    .resources {
+        flex-direction: column;
+        align-items: center;
+    }
+    .stats span,
+    .resources span {
+        margin: 5px 0;
+    }
+}
+
+
+/* 成就面板樣式 */
+
+.achievements-panel {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+}
+
+.achievements-panel h2 {
+    color: #1976d2;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.achievement-category {
+    margin: 10px 0;
+}
+
+.achievement-category h3 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.achievement-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.achievement-item {
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+}
+
+.achievement-item.completed {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.achievement-item .requirement {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.achievement-item .reward {
+    font-weight: bold;
+    color: #1976d2;
+}
+
+.achievement-item .progress {
+    height: 4px;
+    background-color: #e0e0e0;
+    border-radius: 2px;
+    margin-top: 5px;
+}
+
+.achievement-item .progress-bar {
+    height: 100%;
+    background-color: #4caf50;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+
+/* 動畫效果 */
+
+@keyframes resourceChange {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.resource-change {
+    animation: resourceChange 0.5s ease-in-out;
+}
+
+@keyframes buildingConstruct {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.building-construct {
+    animation: buildingConstruct 0.5s ease-out;
+}
+
+@keyframes achievementUnlock {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.achievement-unlock {
+    animation: achievementUnlock 0.5s ease-in-out;
+}
+
+
+/* 自動收益計時器 */
+
+#auto-income-timer {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: bold;
+    color: #1976d2;
+}
+
+
+/* 研究面板樣式 */
+
+.research-panel {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+}
+
+.research-panel h2 {
+    color: #1976d2;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.research-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.research-category {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.research-category h3 {
+    color: #1976d2;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.research-item {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.research-item.completed {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.research-item .cost {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.research-item .effect {
+    color: #1976d2;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.research-item button {
+    width: 100%;
+    margin-top: 5px;
+}
+
+
+/* 響應式設計更新 */
+
+@media (max-width: 600px) {
+    .research-list {
+        grid-template-columns: 1fr;
+    }
+    .resources span {
+        display: block;
+        margin: 5px 0;
+        text-align: center;
+    }
+}
+
+
+/* 左側資源面板 */
+
+.resource-sidebar {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    width: 200px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.resource-sidebar h3 {
+    color: #1976d2;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+    text-align: center;
+}
+
+.resource-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.resource-item:hover {
+    background-color: #e3f2fd;
+}
+
+.resource-item .label {
+    font-weight: bold;
+    color: #333;
+}
+
+.resource-item .value {
+    color: #1976d2;
+    font-weight: bold;
+}
+
+
+/* 響應式設計更新 */
+
+@media (max-width: 1200px) {
+    .resource-sidebar {
+        position: static;
+        width: auto;
+        margin-bottom: 20px;
+    }
+    .container {
+        margin-left: 20px;
+    }
+    body {
+        flex-direction: column;
+    }
+}
+
+
+/* 可折疊面板樣式 */
+
+.collapsible-panel {
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.panel-header {
+    background-color: #1976d2;
+    color: white;
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+    user-select: none;
+}
+
+.panel-header:hover {
+    background-color: #1565c0;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.panel-header .toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.panel-content {
+    background-color: #f8f9fa;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.panel-content.expanded {
+    max-height: 2000px;
+    padding: 15px;
+}
+
+
+/* 等級系統樣式 */
+
+.building-row.locked {
+    opacity: 0.5;
+    position: relative;
+}
+
+.building-row.locked::after {
+    content: "需要更高等級";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    pointer-events: none;
+}
+
+.research-item.locked {
+    opacity: 0.5;
+    position: relative;
+}
+
+.research-item.locked::after {
+    content: "需要更高等級";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    pointer-events: none;
+}
+
+.level-up-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.level-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e3f2fd;
+    border-radius: 5px;
+}
+
+.level-info .level-badge {
+    background-color: #1976d2;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.level-info .level-name {
+    font-weight: bold;
+    color: #1976d2;
+}
+
+.level-info .next-level {
+    margin-left: auto;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.guide-panel {
+    position: fixed;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    background: #fffbe7;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    padding: 20px 18px;
+    z-index: 200;
+    font-size: 1.1em;
+    border: 2px solid #ffe082;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.guide-panel .guide-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 1.15em;
+    color: #1976d2;
+}
+
+.guide-panel .guide-icon {
+    font-size: 1.4em;
+    color: #ffb300;
+}
+
+.guide-panel .guide-progress {
+    width: 100%;
+    height: 8px;
+    background: #ffe082;
+    border-radius: 4px;
+    margin: 8px 0 0 0;
+    overflow: hidden;
+}
+
+.guide-panel .guide-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd54f, #ffb300);
+    border-radius: 4px;
+    transition: width 0.4s;
+}
+
+@media (max-width: 900px) {
+    .guide-panel {
+        position: static;
+        width: 100%;
+        margin: 10px 0;
+        transform: none;
+        box-shadow: none;
+        border-radius: 8px;
+    }
+}
+
+.event-popup {
+    position: fixed;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 260px;
+    max-width: 90vw;
+    background: #fff3e0;
+    color: #d84315;
+    border: 2px solid #ffb300;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+    padding: 18px 30px;
+    font-size: 1.15em;
+    z-index: 9999;
+    display: none;
+    animation: eventPop 0.5s;
+    text-align: center;
+    font-weight: bold;
+}
+
+@keyframes eventPop {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+    }
+    80% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.research-branch {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 120px;
+    transition: box-shadow 0.3s, border 0.3s;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    margin-bottom: 5px;
+}
+
+.research-branch.chosen {
+    border: 2px solid #1976d2;
+    box-shadow: 0 0 10px #1976d233;
+    background: #e3f2fd;
+    position: relative;
+}
+
+.research-branch.chosen::after {
+    content: "已選擇";
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    color: #1976d2;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.research-branch.locked {
+    opacity: 0.5;
+    filter: grayscale(0.7);
+    pointer-events: none;
+}
+
+
+/* 資源數字跳動動畫 */
+
+@keyframes resourceJump {
+    0% {
+        transform: scale(1);
+        color: #1976d2;
+    }
+    30% {
+        transform: scale(1.3);
+        color: #ff9800;
+    }
+    100% {
+        transform: scale(1);
+        color: #1976d2;
+    }
+}
+
+.resource-change {
+    animation: resourceJump 0.5s;
+}
+
+
+/* 升級建築閃光特效 */
+
+@keyframes upgradeFlash {
+    0% {
+        box-shadow: 0 0 0px #fff176;
+    }
+    50% {
+        box-shadow: 0 0 30px #fff176, 0 0 10px #ffd600;
+    }
+    100% {
+        box-shadow: 0 0 0px #fff176;
+    }
+}
+
+.building-construct {
+    animation: upgradeFlash 0.7s;
+}
+
+
+/* 成就解鎖動畫 */
+
+@keyframes achievementUnlock {
+    0% {
+        background: #fffde7;
+    }
+    50% {
+        background: #ffe082;
+    }
+    100% {
+        background: #e8f5e9;
+    }
+}
+
+.achievement-unlock {
+    animation: achievementUnlock 0.7s;
+}

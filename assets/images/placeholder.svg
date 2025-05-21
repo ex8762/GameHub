@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+    <rect width="300" height="200" fill="#f5f5f5"/>
+    <path d="M150,80 L180,130 L120,130 Z" fill="#ddd"/>
+    <circle cx="200" cy="70" r="15" fill="#ddd"/>
+    <text x="150" y="160" fill="#999" font-family="Arial" font-size="14" text-anchor="middle">圖片載入失敗</text>
+</svg> 

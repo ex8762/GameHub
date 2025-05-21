@@ -1,185 +1,610 @@
-body {
-    font-family: 'Noto Sans TC', Arial, sans-serif;
-    background-color: #f5e8d3;
-    background-image: linear-gradient(to bottom right, #f5e8d3, #e6ccb2);
-    min-height: 100vh;
+:root {
+    --primary-color: #8b4513;
+    --secondary-color: #d2691e;
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --panel-bg: #fff;
+    --button-bg: #4a4a4a;
+    --button-hover: #666;
+}
+
+* {
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    box-sizing: border-box;
 }
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
 #game-container {
-    width: 800px;
-    margin: auto;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    background-color: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(139, 69, 19, 0.2);
-    transition: all 0.3s ease;
 }
+
+#status-bar {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--panel-bg);
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 #cafe-view {
-    width: 800px;
-    height: 400px;
-    background-image: url('cafe-background.jpg');
+    background-image: url('../images/cafe-background.jpg');
     background-size: cover;
+    background-position: center;
+    height: 400px;
+    border-radius: 8px;
+    margin-bottom: 20px;
     position: relative;
-    border: 2px solid #8b4513;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
-    transition: background-image 0.5s ease;
 }
+
 .decor-spot {
     position: absolute;
     width: 100px;
     height: 100px;
-}
-#spot1 { top: 50px; left: 50px; }
-#spot2 { top: 50px; left: 150px; }
-#spot3 { top: 150px; left: 50px; }
-#menu {
-    text-align: center;
-    margin: 20px 0;
-}
-#menu button {
-    padding: 12px 24px;
-    margin: 0 10px;
-    background-color: #d2b48c;
-    border: none;
-    cursor: pointer;
+    border: 2px dashed #ccc;
     border-radius: 8px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-#menu button:hover {
-    background-color: #8b4513;
-    color: white;
-}
-#status-bar {
-    text-align: center;
-    padding: 10px;
-    background-color: #deb887;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-/* 各面板共用樣式 */
-#shop-panel, 
-#staff-panel, 
-#decor-panel, 
-#missions-panel, 
-#pending-orders-panel {
-    position: absolute;
-    top: 50px;
-    left: 50px;
-    width: 300px;
-    background-color: #f5f5f5;
-    padding: 20px;
-    border: 2px solid #8b4513;
-    border-radius: 5px;
-    display: none;
-    z-index: 10;
-}
-/* 常駐調配飲品介面：固定在右下角 */
-#permanent-mix-panel {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 320px;
-    background-color: #f5f5f5;
-    padding: 20px;
-    border: 2px solid #8b4513;
-    border-radius: 5px;
-    z-index: 20;
-}
-/* 食譜面板：置於畫面左上角 */
-#recipe-panel {
-  position: fixed;
-  top: 60px;
-  left: 20px;
-  width: 280px;
-  background-color: #fff;
-  border: 2px solid #8b4513;
-  border-radius: 10px;
-  padding: 15px;
-  z-index: 30;
-  max-height: 400px; /* 限制高度 */
-  overflow-y: auto; /* 啟用滾動 */
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  display: none;
 }
 
-#recipe-list li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 14px;
+#spot1 {
+    top: 20%;
+    left: 20%;
 }
-/* 食譜按鈕固定於左上角 */
-#toggle-recipe-button {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 40;
-    padding: 8px 15px;
-    background-color: #8b4513;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: all 0.2s ease;
+
+#spot2 {
+    top: 20%;
+    right: 20%;
 }
-#toggle-recipe-button:hover {
-    background-color: #a0522d;
-    transform: translateY(-2px);
-}
-/* 提示訊息區塊，顯示於畫面上方中央 */
-#notification {
-    position: fixed;
-    top: 10px;
+
+#spot3 {
+    bottom: 20%;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #ffeb3b;
-    color: #000;
-    padding: 10px 20px;
-    border: 1px solid #8b4513;
-    border-radius: 5px;
-    display: none;
-    z-index: 50;
-}
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-label {
-    margin-right: 10px;
-}
-input[type="number"] {
-    width: 60px;
-    padding: 5px;
-}
-/* 飲品製作動畫 */
-@keyframes makeDrink {
-    0% { transform: scale(0.5); opacity: 0; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-}
-.making-drink {
-    animation: makeDrink 2s ease-in-out;
-}
-/* 新增：訂單完成動畫 */
-@keyframes orderComplete {
-    0% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-50px); }
-}
-.order-complete {
-    animation: orderComplete 1s ease-out;
 }
 
-/* 新增：按鈕點擊動畫 */
-@keyframes buttonClick {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+#menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
 }
-.button-click {
-    animation: buttonClick 0.3s ease-in-out;
+
+#menu button {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#menu button:hover {
+    background-color: var(--button-hover);
+}
+
+.panel {
+    background-color: var(--panel-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin: 20px 0;
+    overflow: hidden;
+    display: none;
+}
+
+.panel.active {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+.panel-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 5px;
+    transition: opacity 0.2s;
+}
+
+.close-button:hover {
+    opacity: 0.8;
+}
+
+.shop-items,
+.staff-list,
+.decor-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.shop-item,
+.staff-item,
+.decor-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#permanent-mix-panel {
+    background-color: var(--panel-bg);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.mix-controls {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.mix-controls button {
+    padding: 8px 15px;
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.mix-controls button:hover {
+    background-color: var(--button-hover);
+}
+
+#current-mix {
+    min-height: 50px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+#notification {
+    display: none;
+}
+
+.notification.game {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-family: 'Noto Sans TC', sans-serif;
+}
+
+.notification.game.success {
+    border-left-color: #4CAF50;
+}
+
+.notification.game.warning {
+    border-left-color: #FF9800;
+}
+
+.notification.game.error {
+    border-left-color: #F44336;
+}
+
+.notification.game .notification-content {
+    padding: 12px 16px;
+}
+
+.notification.game .notification-progress {
+    height: 3px;
+    background: linear-gradient(to right, var(--primary-color), #64B5F6);
+}
+
+/* 統計面板樣式 */
+.stats-content {
+    padding: 20px;
+}
+
+.stats-section {
+    margin-bottom: 25px;
+}
+
+.stats-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+/* 成就列表樣式 */
+#achievements-list {
+    display: grid;
+    gap: 10px;
+}
+
+.achievement-item {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.achievement-item.earned {
+    background: linear-gradient(to right, #4CAF50, #45a049);
+    color: white;
+}
+
+.achievement-icon {
+    font-size: 1.2rem;
+}
+
+/* 設置面板樣式 */
+.settings-content {
+    padding: 20px;
+}
+
+.setting-item {
+    margin-bottom: 15px;
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.setting-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.setting-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.setting-actions button:not(.danger) {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.setting-actions button.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.setting-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 動畫效果 */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    #status-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    #menu {
+        flex-direction: column;
+    }
+    .shop-items,
+    .staff-list,
+    .decor-items {
+        grid-template-columns: 1fr;
+    }
+    .mix-controls {
+        flex-wrap: wrap;
+    }
+    .stats-content,
+    .settings-content {
+        padding: 15px;
+    }
+    .setting-actions {
+        flex-direction: column;
+    }
+    .setting-actions button {
+        width: 100%;
+    }
+}
+
+/* 季節面板樣式 */
+.seasonal-button {
+    background: linear-gradient(45deg, #ff6b6b, #ff8787) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.seasonal-button::after {
+    content: '限定';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff4757;
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.7em;
+    transform: rotate(45deg);
+}
+
+.events-button {
+    background: linear-gradient(45deg, #4834d4, #686de0) !important;
+}
+
+.events-button.active {
+    animation: pulse 2s infinite;
+}
+
+#seasonal-panel .panel-content,
+#events-panel .panel-content {
+    padding: 20px;
+}
+
+.seasonal-info {
+    background: rgba(255, 107, 107, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.seasonal-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.menu-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.menu-item:hover {
+    transform: translateY(-2px);
+}
+
+.menu-item.seasonal {
+    border: 2px solid #ff6b6b;
+    position: relative;
+}
+
+.seasonal-tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff6b6b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+/* 活動事件樣式 */
+.active-event {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.event-timer {
+    background: #4834d4;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.active-event.fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+/* 季節背景效果 */
+.season-spring {
+    background-image: url('../images/spring-bg.jpg');
+}
+
+.season-summer {
+    background-image: url('../images/summer-bg.jpg');
+}
+
+.season-autumn {
+    background-image: url('../images/autumn-bg.jpg');
+}
+
+.season-winter {
+    background-image: url('../images/winter-bg.jpg');
+}
+
+/* 動畫效果 */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .seasonal-menu {
+        grid-template-columns: 1fr;
+    }
+    
+    .event-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .seasonal-button::after {
+        display: none;
+    }
+}
+
+/* 季節轉換動畫 */
+.season-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: seasonTransition 2s ease-in-out forwards;
+}
+
+.season-transition h2 {
+    font-size: 3em;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes seasonTransition {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* 季節特效 */
+.season-effect {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cherry-blossom {
+    width: 20px;
+    height: 20px;
+    background: pink;
+    border-radius: 50% 0 50% 0;
+    animation: fall 10s linear infinite;
+}
+
+.snowflake {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    animation: snowfall 8s linear infinite;
+}
+
+.maple-leaf {
+    width: 30px;
+    height: 30px;
+    background: #ff6b6b;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: fall 15s linear infinite;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100%) rotate(0deg);
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
+@keyframes snowfall {
+    0% {
+        transform: translateY(-100%) translateX(0);
+    }
+    50% {
+        transform: translateY(50vh) translateX(100px);
+    }
+    100% {
+        transform: translateY(100vh) translateX(0);
+    }
 }

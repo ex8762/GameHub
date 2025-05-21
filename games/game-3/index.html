@@ -1,9 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="一個有趣的咖啡廳經營遊戲">
+    <meta name="theme-color" content="#8b4513">
     <title>咖啡廳經營遊戲</title>
+    
+    <!-- 字體和圖標 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    
+    <!-- 遊戲樣式 -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- 主要腳本 -->
+    <script src="/assets/js/main.js"></script>
+    <script src="js/script.js"></script>
+    
     <style>
         body {
             font-family: 'Noto Sans TC', Arial, sans-serif;
@@ -13,6 +29,7 @@
             margin: 0;
             padding: 20px;
         }
+        
         #game-container {
             width: 800px;
             margin: auto;
@@ -22,6 +39,7 @@
             box-shadow: 0 5px 20px rgba(139, 69, 19, 0.2);
             transition: all 0.3s ease;
         }
+        
         #cafe-view {
             width: 800px;
             height: 400px;
@@ -29,21 +47,36 @@
             background-size: cover;
             position: relative;
             border: 2px solid #8b4513;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
             transition: background-image 0.5s ease;
         }
+        
         .decor-spot {
             position: absolute;
             width: 100px;
             height: 100px;
         }
-        #spot1 { top: 50px; left: 50px; }
-        #spot2 { top: 50px; left: 150px; }
-        #spot3 { top: 150px; left: 50px; }
+        
+        #spot1 {
+            top: 50px;
+            left: 50px;
+        }
+        
+        #spot2 {
+            top: 50px;
+            left: 150px;
+        }
+        
+        #spot3 {
+            top: 150px;
+            left: 50px;
+        }
+        
         #menu {
             text-align: center;
             margin: 20px 0;
         }
+        
         #menu button {
             padding: 12px 24px;
             margin: 0 10px;
@@ -53,12 +86,14 @@
             border-radius: 8px;
             font-weight: bold;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+        
         #menu button:hover {
             background-color: #8b4513;
             color: white;
         }
+        
         #status-bar {
             text-align: center;
             padding: 10px;
@@ -66,10 +101,11 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        #shop-panel, 
-        #staff-panel, 
-        #decor-panel, 
-        #missions-panel, 
+        
+        #shop-panel,
+        #staff-panel,
+        #decor-panel,
+        #missions-panel,
         #pending-orders-panel {
             position: absolute;
             top: 50px;
@@ -82,6 +118,7 @@
             display: none;
             z-index: 10;
         }
+        
         #permanent-mix-panel {
             position: fixed;
             bottom: 20px;
@@ -93,6 +130,7 @@
             border-radius: 5px;
             z-index: 20;
         }
+        
         #recipe-panel {
             position: fixed;
             top: 60px;
@@ -105,14 +143,16 @@
             z-index: 30;
             max-height: 400px;
             overflow-y: auto;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             display: none;
         }
+        
         #recipe-list li {
             padding: 5px 0;
             border-bottom: 1px solid #eee;
             font-size: 14px;
         }
+        
         #toggle-recipe-button {
             position: fixed;
             top: 20px;
@@ -125,13 +165,15 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
         }
+        
         #toggle-recipe-button:hover {
             background-color: #a0522d;
             transform: translateY(-2px);
         }
+        
         #notification {
             position: fixed;
             top: 10px;
@@ -145,43 +187,74 @@
             display: none;
             z-index: 50;
         }
+        
         form {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+        
         label {
             margin-right: 10px;
         }
+        
         input[type="number"] {
             width: 60px;
             padding: 5px;
         }
+        
         @keyframes makeDrink {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
+        
         .making-drink {
             animation: makeDrink 2s ease-in-out;
         }
+        
         @keyframes orderComplete {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
         }
+        
         .order-complete {
             animation: orderComplete 1s ease-out;
         }
+        
         @keyframes buttonClick {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
+        
         .button-click {
             animation: buttonClick 0.3s ease-in-out;
         }
     </style>
 </head>
+
 <body>
     <audio id="background-music" loop>
         <source src="sounds/cafe-ambience.mp3" type="audio/mpeg">
@@ -202,7 +275,7 @@
         <source src="sounds/drink-making.mp3" type="audio/mpeg">
     </audio>
 
-    <div id="notification"></div>
+    <div id="notification" aria-live="polite"></div>
     <button id="toggle-recipe-button" onclick="toggleRecipePanel()">食譜</button>
     <div id="recipe-panel">
         <button class="close-button" onclick="toggleRecipePanel()" style="float:right;">X</button>
@@ -211,128 +284,218 @@
     </div>
 
     <div id="game-container">
-        <h1 style="text-align: center; color: #8b4513;">歡迎來到咖啡館經營遊戲</h1>
-        <p style="text-align: center; color: #666;">
-            目標：管理咖啡館，完成任務升級，打造夢想店面！
-        </p>
-        <div id="cafe-view">
-            <div class="decor-spot" id="spot1"></div>
-            <div class="decor-spot" id="spot2"></div>
-            <div class="decor-spot" id="spot3"></div>
-        </div>
-        <div id="menu">
-            <button id="shop-button">商店</button>
-            <button id="staff-button">員工</button>
-            <button id="decor-button">裝飾</button>
-            <button id="missions-button">任務</button>
-            <button id="pending-orders-button">待處理訂單</button>
-        </div>
         <div id="status-bar">
-            金錢: <span id="money">100</span> | 等級: <span id="level">1</span>
+            <span>等級: <span id="level">1</span></span>
+            <span>金錢: $<span id="money">1000</span></span>
+            <span>聲望: <span id="reputation">0</span></span>
+            <span>顧客滿意度: <span id="satisfaction">100</span>%</span>
+            <span>季節: <span id="current-season">春</span></span>
+            <span>日期: 第<span id="current-day">1</span>天</span>
+            <span>遊戲時間: <span id="play-time">00:00:00</span></span>
+        </div>
+
+        <div id="cafe-view">
+            <div id="spot1" class="decor-spot"></div>
+            <div id="spot2" class="decor-spot"></div>
+            <div id="spot3" class="decor-spot"></div>
+        </div>
+
+        <div id="menu">
+            <button onclick="togglePanel('shop-panel')">商店</button>
+            <button onclick="togglePanel('staff-panel')">員工</button>
+            <button onclick="togglePanel('decor-panel')">裝飾</button>
+            <button onclick="togglePanel('missions-panel')">任務</button>
+            <button onclick="togglePanel('pending-orders-panel')">訂單</button>
+            <button onclick="togglePanel('seasonal-panel')" class="seasonal-button">季節限定</button>
+            <button onclick="togglePanel('events-panel')" class="events-button">特殊事件</button>
+            <button onclick="togglePanel('stats-panel')">統計</button>
+            <button onclick="togglePanel('settings-panel')">設置</button>
+        </div>
+
+        <div id="shop-panel" class="panel">
+            <h3>商店</h3>
+            <div class="shop-items">
+                <div class="shop-item">
+                    <span>咖啡機</span>
+                    <button onclick="buyItem('coffee-machine')">購買 ($500)</button>
+                </div>
+                <div class="shop-item">
+                    <span>茶具組</span>
+                    <button onclick="buyItem('tea-set')">購買 ($300)</button>
+                </div>
+                <div class="shop-item">
+                    <span>甜點櫃</span>
+                    <button onclick="buyItem('dessert-case')">購買 ($400)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="staff-panel" class="panel">
+            <h3>員工管理</h3>
+            <div class="staff-list">
+                <div class="staff-item">
+                    <span>服務生</span>
+                    <button onclick="hireStaff('waiter')">僱用 ($200/月)</button>
+                </div>
+                <div class="staff-item">
+                    <span>廚師</span>
+                    <button onclick="hireStaff('chef')">僱用 ($300/月)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="decor-panel" class="panel">
+            <h3>裝飾品</h3>
+            <div class="decor-items">
+                <div class="decor-item">
+                    <span>盆栽</span>
+                    <button onclick="buyDecor('plant')">購買 ($100)</button>
+                </div>
+                <div class="decor-item">
+                    <span>畫作</span>
+                    <button onclick="buyDecor('painting')">購買 ($200)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="missions-panel" class="panel">
+            <h3>任務</h3>
+            <div id="mission-list"></div>
+        </div>
+
+        <div id="pending-orders-panel" class="panel">
+            <h3>待處理訂單</h3>
+            <div id="order-list"></div>
+        </div>
+
+        <div id="permanent-mix-panel">
+            <h3>調製飲品</h3>
+            <div class="mix-controls">
+                <button onclick="addIngredient('coffee')">咖啡</button>
+                <button onclick="addIngredient('milk')">牛奶</button>
+                <button onclick="addIngredient('sugar')">糖</button>
+                <button onclick="addIngredient('syrup')">糖漿</button>
+            </div>
+            <div id="current-mix"></div>
+            <button onclick="makeDrink()">完成調製</button>
+        </div>
+
+        <div id="seasonal-panel" class="panel">
+            <div class="panel-header">
+                <h3>季節限定</h3>
+                <button class="close-button" onclick="togglePanel('seasonal-panel')">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="seasonal-info">
+                    <h4>當前季節效果</h4>
+                    <p id="season-effect"></p>
+                </div>
+                <div class="seasonal-menu">
+                    <h4>限定飲品</h4>
+                    <div id="seasonal-menu"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="events-panel" class="panel">
+            <div class="panel-header">
+                <h3>特殊事件</h3>
+                <button class="close-button" onclick="togglePanel('events-panel')">×</button>
+            </div>
+            <div class="panel-content">
+                <div id="active-events">
+                    <!-- 活動事件將動態添加在這裡 -->
+                </div>
+            </div>
+        </div>
+
+        <div id="stats-panel" class="panel">
+            <div class="panel-header">
+                <h3>遊戲統計</h3>
+                <button class="close-button" onclick="togglePanel('stats-panel')">×</button>
+            </div>
+            <div class="stats-content">
+                <div class="stats-section">
+                    <h4>基本統計</h4>
+                    <div class="stat-item">
+                        <span>製作飲品總數</span>
+                        <span id="total-drinks">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>總收入</span>
+                        <span id="total-earnings">$0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>服務顧客數</span>
+                        <span id="total-customers">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>平均滿意度</span>
+                        <span id="avg-satisfaction">100%</span>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h4>最佳紀錄</h4>
+                    <div class="stat-item">
+                        <span>最暢銷飲品</span>
+                        <span id="best-selling">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>單日最高收入</span>
+                        <span id="best-day-earnings">$0</span>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h4>成就進度</h4>
+                    <div id="achievements-list">
+                        <!-- 成就會動態添加在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-panel" class="panel">
+            <div class="panel-header">
+                <h3>遊戲設置</h3>
+                <button class="close-button" onclick="togglePanel('settings-panel')">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="sound-enabled" checked>
+                        音效
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="music-enabled" checked>
+                        背景音樂
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="notifications-enabled" checked>
+                        通知提示
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="auto-save-enabled" checked>
+                        自動存檔
+                    </label>
+                </div>
+                <div class="setting-actions">
+                    <button onclick="GameState.save()">手動存檔</button>
+                    <button onclick="GameState.reset()" class="danger">重置遊戲</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="shop-panel">
-        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
-        <h2>商店</h2>
-        <p>這裡可以購買食材。</p>
-        <div>
-            <label>咖啡 - 10元</label>
-            <button id="buy-coffee">購買</button>
-        </div>
-        <div>
-            <label>牛奶 - 8元</label>
-            <button id="buy-milk">購買</button>
-        </div>
-        <div>
-            <label>糖 - 5元</label>
-            <button id="buy-sugar">購買</button>
-        </div>
-        <div>
-            <label>可可 - 10元</label>
-            <button id="buy-cocoa">購買</button>
-        </div>
-        <div>
-            <label>冰塊 - 5元</label>
-            <button id="buy-ice">購買</button>
-        </div>
-        <div>
-            <label>巧克力醬 - 12元</label>
-            <button id="buy-chocolate-syrup">購買</button>
-        </div>
-
-        <h3>目前物資</h3>
-        <p>咖啡: <span id="coffee-count"></span></p>
-        <p>牛奶: <span id="milk-count"></span></p>
-        <p>糖: <span id="sugar-count"></span></p>
-        <p>可可: <span id="cocoa-count"></span></p>
-        <p>冰塊: <span id="ice-count"></span></p>
-        <p>巧克力醬: <span id="chocolate-syrup-count">0</span></p>
-    </div>
-
-    <div id="staff-panel">
-        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
-        <h2>員工管理</h2>
-        <p>員工效果：每秒每位員工增加1金錢。</p>
-        <button id="hire-staff">招聘員工（100元）</button>
-        <ul id="staff-list"></ul>
-    </div>
-
-    <div id="decor-panel">
-        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
-        <h2>裝飾</h2>
-        <p>裝飾店面吸引更多顧客，完成任務可獲獎勵。</p>
-        <div>
-            <label>桌子 - 50元</label>
-            <button id="buy-table-decor">購買</button>
-        </div>
-        <div>
-            <label>植物 - 30元</label>
-            <button id="buy-plant-decor">購買</button>
-        </div>
-        <div>
-            <label>藝術畫 - 80元</label>
-            <button id="buy-art-decor">購買</button>
-        </div>
-    </div>
-
-    <div id="missions-panel">
-        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
-        <h2>任務清單</h2>
-        <p>完成任務可獲金錢或經驗值，幫助升級。</p>
-        <ul id="missions-list"></ul>
-    </div>
-
-    <div id="pending-orders-panel">
-        <button class="close-button" onclick="this.parentElement.style.display='none'" style="float:right;">X</button>
-        <h2>待處理訂單</h2>
-        <ul id="pending-orders-list"></ul>
-    </div>
-
-    <div id="permanent-mix-panel">
-        <h2>調配飲品</h2>
-        <p>請根據訂單選擇正確食材，或自行嘗試調配。</p>
-        <p>所需飲品: <span id="permanent-required-drink">無</span></p>
-        <form id="permanent-mix-form">
-            <label>咖啡:</label>
-            <input type="number" id="permanent-coffee-input" min="0" max="99" value="0">
-            <label>牛奶:</label>
-            <input type="number" id="permanent-milk-input" min="0" max="99" value="0">
-            <label>糖:</label>
-            <input type="number" id="permanent-sugar-input" min="0" max="99" value="0">
-            <label>可可:</label>
-            <input type="number" id="permanent-cocoa-input" min="0" max="99" value="0">
-            <label>冰塊:</label>
-            <input type="number" id="permanent-ice-input" min="0" max="99" value="0">
-            <label>巧克力醬:</label>
-            <input type="number" id="permanent-chocolate-syrup-input" min="0" max="99" value="0">
-            <button id="permanent-make-button" type="button">製作</button>
-        </form>
-    </div>
-
-    <script src="game-functions.js"></script>
-    <script src="script.js"></script>
-    <script src="init-vars.js"></script>
-    <script src="button-fix.js"></script>
+    <script src="js/init-vars.js"></script>
+    <script src="js/game-functions.js"></script>
+    <script src="js/button-fix.js"></script>
+    <script src="js/script.js"></script>
 </body>
+
 </html>

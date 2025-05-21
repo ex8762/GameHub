@@ -1,115 +1,827 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的遊戲列表</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>遊戲天地 - 精選網頁遊戲</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+         :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #f5f5f5;
+            --header-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --card-bg: #2d2d2d;
+            --header-bg: #2d2d2d;
+            --border-color: #404040;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        header {
+            background-color: var(--header-bg);
+        }
+        
+        .game-section {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .game-section {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .theme-switch {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-switch:hover {
+            transform: scale(1.1);
+        }
+        
+        .theme-switch i {
+            font-size: 24px;
+            color: var(--text-color);
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .loading-spinner i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .loading-spinner p {
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .comment {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .comment-username {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .comment-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .comment-content {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .comment-rating {
+            color: #ffd700;
+        }
+        
+        .comment-rating i {
+            margin-right: 2px;
+        }
+    </style>
+    <script>
+        // 主題切換功能
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeSwitch = document.getElementById('themeSwitch');
+            const themeIcon = themeSwitch.querySelector('i');
+
+            // 從本地儲存讀取主題設定
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+            }
+
+            themeSwitch.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                document.documentElement.setAttribute('data-theme', newTheme);
+                themeIcon.classList.replace(
+                    newTheme === 'dark' ? 'fa-moon' : 'fa-sun',
+                    newTheme === 'dark' ? 'fa-sun' : 'fa-moon'
+                );
+
+                // 儲存主題設定
+                localStorage.setItem('theme', newTheme);
+            });
+        });
+    </script>
 </head>
+
 <body>
+    <div class="theme-switch" id="themeSwitch">
+        <i class="fas fa-moon"></i>
+    </div>
     <header>
         <nav>
-            <h1>🎮 我的遊戲列表</h1>
-            <p style="margin:0 0 10px 0;font-size:1.1rem;color:#b2dfdb;">歡迎來到我的遊戲專區，體驗不同類型的趣味遊戲！</p>
-            <ul>
-                <li><a href="#shooting-game">簡易射擊遊戲</a></li>
-                <li><a href="#simulation-game">模擬經營遊戲</a></li>
-                <li><a href="#cafe-game">咖啡廳經營遊戲</a></li>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo-container">
+                <h1><i class="fas fa-gamepad"></i> 遊戲天地</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#shooting-game"><i class="fas fa-crosshairs"></i> 射擊遊戲</a></li>
+                <li><a href="#simulation-game"><i class="fas fa-city"></i> 模擬經營</a></li>
+                <li><a href="#cafe-game"><i class="fas fa-coffee"></i> 咖啡廳</a></li>
+                <li><a href="#about"><i class="fas fa-info-circle"></i> 關於我們</a></li>
             </ul>
         </nav>
     </header>
-    <main>
-        <section id="shooting-game">
-            <h2>簡易射擊遊戲 <span style="font-size:1rem;color:#388E3C;vertical-align:middle;">(動作射擊)</span></h2>
-            <div class="game-preview">
-                <div class="game-screenshot">
-                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="300" height="200" fill="#111" />
-                        <!-- 玩家飛機 -->
-                        <polygon points="150,170 125,190 175,190" fill="#4CAF50" />
-                        <!-- 敵人 -->
-                        <rect x="80" y="30" width="30" height="30" fill="#F44336" />
-                        <rect x="150" y="50" width="30" height="30" fill="#F44336" />
-                        <rect x="220" y="40" width="30" height="30" fill="#F44336" />
-                        <!-- 子彈 -->
-                        <rect x="148" y="120" width="4" height="10" fill="#FFEB3B" />
-                        <rect x="148" y="90" width="4" height="10" fill="#FFEB3B" />
-                    </svg>
-                </div>
-                <a href="games/game-1/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
+
+    <div class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="gameSearch" placeholder="搜尋遊戲...">
+            <button class="clear-search" id="clearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="search-filters">
+            <button class="filter-btn active" data-filter="all">
+                <i class="fas fa-th-large"></i> 全部
+            </button>
+            <button class="filter-btn" data-filter="action">
+                <i class="fas fa-crosshairs"></i> 動作
+            </button>
+            <button class="filter-btn" data-filter="simulation">
+                <i class="fas fa-city"></i> 模擬
+            </button>
+            <button class="filter-btn" data-filter="strategy">
+                <i class="fas fa-chess"></i> 策略
+            </button>
+        </div>
+    </div>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="logo-container">
+                <h1><i class="fas fa-gamepad"></i> 遊戲天地</h1>
             </div>
-            <p style="font-weight:bold;color:#388E3C;">玩法提示：使用方向鍵移動飛機，空白鍵發射子彈，擊敗敵人獲得高分！</p>
-            <ul>
-                <li>簡單易上手的操作</li>
-                <li>精美的視覺效果</li>
-                <li>刺激的遊戲體驗</li>
-            </ul>
+            <p class="welcome-message">探索多樣化的遊戲世界，盡情享受遊戲的樂趣！</p>
+        </div>
+    </section>
+
+    <main class="games-container">
+        <div class="category-filter">
+            <h3>遊戲分類</h3>
+            <div class="category-tags">
+                <button class="category-tag active" data-category="all">
+                    <i class="fas fa-th-large"></i> 全部遊戲
+                </button>
+                <button class="category-tag" data-category="action">
+                    <i class="fas fa-crosshairs"></i> 動作射擊
+                </button>
+                <button class="category-tag" data-category="simulation">
+                    <i class="fas fa-city"></i> 模擬經營
+                </button>
+                <button class="category-tag" data-category="strategy">
+                    <i class="fas fa-chess"></i> 策略遊戲
+                </button>
+                <button class="category-tag" data-category="puzzle">
+                    <i class="fas fa-puzzle-piece"></i> 益智解謎
+                </button>
+            </div>
+        </div>
+
+        <section id="shooting-game" class="game-section" data-categories="action">
+            <div class="game-content">
+                <div class="game-info">
+                    <h2>簡易射擊遊戲 <span class="game-category">動作射擊</span></h2>
+                    <div class="game-rating">
+                        <div class="stars">
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+                        <span class="rating-score">0.0</span>
+                        <span class="rating-count">(0 人評分)</span>
+                    </div>
+                    <p class="game-description">體驗刺激的射擊遊戲，挑戰你的反應能力！</p>
+                    <ul class="game-features">
+                        <li><i class="fas fa-mouse-pointer"></i> 簡單易上手的操作</li>
+                        <li><i class="fas fa-star"></i> 精美的視覺效果</li>
+                        <li><i class="fas fa-bolt"></i> 刺激的遊戲體驗</li>
+                    </ul>
+                    <a href="games/game-1/index.html" class="play-button">
+                        <i class="fas fa-play"></i> 立即遊玩
+                    </a>
+                </div>
+                <div class="game-preview">
+                    <div class="game-screenshot">
+                        <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="300" height="200" fill="#111" />
+                            <polygon points="150,170 125,190 175,190" fill="#4CAF50" />
+                            <rect x="80" y="30" width="30" height="30" fill="#F44336" />
+                            <rect x="150" y="50" width="30" height="30" fill="#F44336" />
+                            <rect x="220" y="40" width="30" height="30" fill="#F44336" />
+                            <rect x="148" y="120" width="4" height="10" fill="#FFEB3B" />
+                            <rect x="148" y="90" width="4" height="10" fill="#FFEB3B" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="game-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>玩法提示：使用方向鍵移動飛機，空白鍵發射子彈，擊敗敵人獲得高分！</span>
+            </div>
+            <div class="comments-section">
+                <h3><i class="fas fa-comments"></i> 玩家評論</h3>
+                <div class="comments-list" id="shooting-game-comments">
+                    <!-- 評論將通過 JavaScript 動態添加 -->
+                </div>
+                <form class="comment-form" data-game="shooting-game">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="您的暱稱" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="comment" placeholder="分享您的遊戲體驗..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="rating-input">
+                            <span>評分：</span>
+                            <div class="stars-input">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-comment">
+                        <i class="fas fa-paper-plane"></i> 發表評論
+                    </button>
+                </form>
+            </div>
         </section>
-        <section id="simulation-game">
-            <h2>模擬經營遊戲 <span style="font-size:1rem;color:#1976D2;vertical-align:middle;">(策略模擬)</span></h2>
-            <div class="game-preview">
-                <div class="game-screenshot">
-                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="300" height="200" fill="#E3F2FD" />
-                        <!-- 建築物 -->
-                        <rect x="50" y="80" width="60" height="120" fill="#90CAF9" />
-                        <rect x="120" y="100" width="80" height="100" fill="#42A5F5" />
-                        <rect x="210" y="70" width="50" height="130" fill="#1E88E5" />
-                        <!-- 道路 -->
-                        <rect x="0" y="180" width="300" height="20" fill="#455A64" />
-                        <!-- 車輛 -->
-                        <rect x="70" y="165" width="30" height="15" fill="#FF9800" />
-                        <rect x="180" y="165" width="30" height="15" fill="#4CAF50" />
-                    </svg>
+
+        <section id="simulation-game" class="game-section" data-categories="simulation strategy">
+            <div class="game-content">
+                <div class="game-info">
+                    <h2>模擬經營遊戲 <span class="game-category">策略模擬</span></h2>
+                    <div class="game-rating">
+                        <div class="stars">
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+                        <span class="rating-score">0.0</span>
+                        <span class="rating-count">(0 人評分)</span>
+                    </div>
+                    <p class="game-description">打造你的商業帝國，體驗經營的樂趣！</p>
+                    <ul class="game-features">
+                        <li><i class="fas fa-building"></i> 豐富的建築選擇</li>
+                        <li><i class="fas fa-chart-line"></i> 複雜的經濟系統</li>
+                        <li><i class="fas fa-route"></i> 多樣化的發展路線</li>
+                    </ul>
+                    <a href="games/game-2/index.html" class="play-button">
+                        <i class="fas fa-play"></i> 立即遊玩
+                    </a>
                 </div>
-                <a href="games/game-2/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
+                <div class="game-preview">
+                    <div class="game-screenshot">
+                        <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="300" height="200" fill="#E3F2FD" />
+                            <rect x="50" y="80" width="60" height="120" fill="#90CAF9" />
+                            <rect x="120" y="100" width="80" height="100" fill="#42A5F5" />
+                            <rect x="210" y="70" width="50" height="130" fill="#1E88E5" />
+                            <rect x="0" y="180" width="300" height="20" fill="#455A64" />
+                            <rect x="70" y="165" width="30" height="15" fill="#FF9800" />
+                            <rect x="180" y="165" width="30" height="15" fill="#4CAF50" />
+                        </svg>
+                    </div>
+                </div>
             </div>
-            <p style="font-weight:bold;color:#1976D2;">玩法提示：建設城市、發展經濟，打造屬於你的企業王國！</p>
-            <ul>
-                <li>豐富的建築選擇</li>
-                <li>複雜的經濟系統</li>
-                <li>多樣化的發展路線</li>
-            </ul>
+            <div class="game-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>玩法提示：建設城市、發展經濟，打造屬於你的企業王國！</span>
+            </div>
+            <div class="comments-section">
+                <h3><i class="fas fa-comments"></i> 玩家評論</h3>
+                <div class="comments-list" id="simulation-game-comments">
+                    <!-- 評論將通過 JavaScript 動態添加 -->
+                </div>
+                <form class="comment-form" data-game="simulation-game">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="您的暱稱" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="comment" placeholder="分享您的遊戲體驗..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="rating-input">
+                            <span>評分：</span>
+                            <div class="stars-input">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-comment">
+                        <i class="fas fa-paper-plane"></i> 發表評論
+                    </button>
+                </form>
+            </div>
         </section>
-        <section id="cafe-game">
-            <h2>咖啡廳經營遊戲 <span style="font-size:1rem;color:#795548;vertical-align:middle;">(模擬經營)</span></h2>
-            <div class="game-preview">
-                <div class="game-screenshot">
-                    <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="300" height="200" fill="#EFEBE9" />
-                        <!-- 咖啡廳內部 -->
-                        <rect x="20" y="40" width="260" height="140" fill="#D7CCC8" />
-                        <!-- 櫃檯 -->
-                        <rect x="30" y="50" width="80" height="20" fill="#8D6E63" />
-                        <!-- 桌子 -->
-                        <rect x="130" y="60" width="30" height="30" fill="#A1887F" />
-                        <rect x="190" y="60" width="30" height="30" fill="#A1887F" />
-                        <rect x="130" y="120" width="30" height="30" fill="#A1887F" />
-                        <rect x="190" y="120" width="30" height="30" fill="#A1887F" />
-                        <!-- 裝飾 -->
-                        <rect x="40" y="90" width="20" height="80" fill="#6D4C41" />
-                        <circle cx="145" cy="75" r="8" fill="#BCAAA4" />
-                        <circle cx="205" cy="75" r="8" fill="#BCAAA4" />
-                        <circle cx="145" cy="135" r="8" fill="#BCAAA4" />
-                        <circle cx="205" cy="135" r="8" fill="#BCAAA4" />
-                    </svg>
+
+        <section id="cafe-game" class="game-section" data-categories="simulation">
+            <div class="game-content">
+                <div class="game-info">
+                    <h2>咖啡廳經營遊戲 <span class="game-category">模擬經營</span></h2>
+                    <div class="game-rating">
+                        <div class="stars">
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+                        <span class="rating-score">0.0</span>
+                        <span class="rating-count">(0 人評分)</span>
+                    </div>
+                    <p class="game-description">經營你的夢想咖啡廳，創造獨特的咖啡體驗！</p>
+                    <ul class="game-features">
+                        <li><i class="fas fa-mug-hot"></i> 多樣化的咖啡製作</li>
+                        <li><i class="fas fa-store"></i> 店鋪裝潢與升級</li>
+                        <li><i class="fas fa-users"></i> 顧客互動系統</li>
+                    </ul>
+                    <a href="games/game-3/index.html" class="play-button">
+                        <i class="fas fa-play"></i> 立即遊玩
+                    </a>
                 </div>
-                <a href="games/game-3/index.html" class="play-button" title="點擊開始遊戲">立即遊玩</a>
+                <div class="game-preview">
+                    <div class="game-screenshot">
+                        <svg width="100%" height="100%" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="300" height="200" fill="#EFEBE9" />
+                            <rect x="20" y="40" width="260" height="140" fill="#D7CCC8" />
+                            <rect x="30" y="50" width="80" height="20" fill="#8D6E63" />
+                            <rect x="130" y="60" width="30" height="30" fill="#A1887F" />
+                            <rect x="190" y="60" width="30" height="30" fill="#A1887F" />
+                            <rect x="130" y="120" width="30" height="30" fill="#A1887F" />
+                            <rect x="190" y="120" width="30" height="30" fill="#A1887F" />
+                            <rect x="40" y="90" width="20" height="80" fill="#6D4C41" />
+                            <circle cx="145" cy="75" r="8" fill="#BCAAA4" />
+                            <circle cx="205" cy="75" r="8" fill="#BCAAA4" />
+                            <circle cx="145" cy="135" r="8" fill="#BCAAA4" />
+                            <circle cx="205" cy="135" r="8" fill="#BCAAA4" />
+                        </svg>
+                    </div>
+                </div>
             </div>
-            <p style="font-weight:bold;color:#795548;">玩法提示：經營你的夢想咖啡廳，製作美味飲品，服務顧客，提升店鋪等級！</p>
-            <ul>
-                <li>多樣化的咖啡製作</li>
-                <li>店鋪裝潢與升級</li>
-                <li>顧客互動系統</li>
-            </ul>
+            <div class="game-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>玩法提示：經營你的夢想咖啡廳，製作美味飲品，服務顧客，提升店鋪等級！</span>
+            </div>
+            <div class="comments-section">
+                <h3><i class="fas fa-comments"></i> 玩家評論</h3>
+                <div class="comments-list" id="cafe-game-comments">
+                    <!-- 評論將通過 JavaScript 動態添加 -->
+                </div>
+                <form class="comment-form" data-game="cafe-game">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="您的暱稱" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="comment" placeholder="分享您的遊戲體驗..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="rating-input">
+                            <span>評分：</span>
+                            <div class="stars-input">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-comment">
+                        <i class="fas fa-paper-plane"></i> 發表評論
+                    </button>
+                </form>
+            </div>
         </section>
     </main>
-    <footer>
-        <p>&copy; 2025 我的遊戲列表. All rights reserved.</p>
-        <div style="margin-top:8px;">
-            <a href="https://github.com/ex8762" target="_blank" style="color:#90caf9;margin:0 8px;text-decoration:none;">GitHub</a> |
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=ex8762@gmail.com" style="color:#ffb74d;margin:0 8px;text-decoration:none;">聯絡作者</a>
+
+    <section id="about" class="about-section">
+        <div class="about-content">
+            <h2><i class="fas fa-info-circle"></i> 關於我們</h2>
+            <div class="about-grid">
+                <div class="about-card">
+                    <i class="fas fa-gamepad"></i>
+                    <h3>我們的使命</h3>
+                    <p>為玩家提供優質的網頁遊戲體驗，讓每個人都能享受遊戲的樂趣。</p>
+                </div>
+                <div class="about-card">
+                    <i class="fas fa-star"></i>
+                    <h3>遊戲特色</h3>
+                    <p>精心挑選的遊戲內容，確保每個遊戲都具有獨特的玩法和樂趣。</p>
+                </div>
+                <div class="about-card">
+                    <i class="fas fa-users"></i>
+                    <h3>社群互動</h3>
+                    <p>建立活躍的遊戲社群，讓玩家們能夠分享遊戲心得和經驗。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-gamepad"></i> 遊戲天地
+            </div>
+            <p class="copyright">&copy; 2025 遊戲天地. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://github.com/ex8762" target="_blank" class="footer-link">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="mailto:ex8762@gmail.com" class="footer-link">
+                    <i class="fas fa-envelope"></i> 聯絡作者
+                </a>
+                <a href="#" class="footer-link">
+                    <i class="fas fa-info-circle"></i> 關於我們
+                </a>
+            </div>
         </div>
     </footer>
+
+    <!-- 圖片預覽模態框 -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+        <div class="preview-content">
+            <span class="close-preview" id="closePreview">&times;</span>
+            <img id="previewImage" src="" alt="遊戲預覽圖">
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        // 移動端選單
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            mobileMenuBtn.classList.toggle('active');
+        });
+
+        // 搜尋功能
+        const gameSearch = document.getElementById('gameSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        const gameSections = document.querySelectorAll('.game-section');
+
+        gameSearch.addEventListener('input', () => {
+            const searchTerm = gameSearch.value.toLowerCase();
+            gameSections.forEach(section => {
+                const title = section.querySelector('h2').textContent.toLowerCase();
+                const description = section.querySelector('.game-description').textContent.toLowerCase();
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        });
+
+        clearSearch.addEventListener('click', () => {
+            gameSearch.value = '';
+            gameSections.forEach(section => {
+                section.style.display = 'block';
+            });
+        });
+
+        // 分類過濾功能
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const categoryTags = document.querySelectorAll('.category-tag');
+
+        function filterGames(category) {
+            gameSections.forEach(section => {
+                const categories = section.dataset.categories.split(' ');
+                if (category === 'all' || categories.includes(category)) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterGames(btn.dataset.filter);
+            });
+        });
+
+        categoryTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                categoryTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                filterGames(tag.dataset.category);
+            });
+        });
+
+        // 評分系統初始化
+        document.querySelectorAll('.stars-input').forEach(container => {
+            const stars = container.querySelectorAll('i');
+            stars.forEach(star => {
+                star.addEventListener('mouseover', () => {
+                    const rating = star.dataset.rating;
+                    stars.forEach(s => {
+                        if (s.dataset.rating <= rating) {
+                            s.classList.replace('far', 'fas');
+                        } else {
+                            s.classList.replace('fas', 'far');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', () => {
+                    const selectedStar = container.querySelector('.fas');
+                    if (selectedStar) {
+                        const rating = selectedStar.dataset.rating;
+                        stars.forEach(s => {
+                            if (s.dataset.rating <= rating) {
+                                s.classList.replace('far', 'fas');
+                            } else {
+                                s.classList.replace('fas', 'far');
+                            }
+                        });
+                    } else {
+                        stars.forEach(s => s.classList.replace('fas', 'far'));
+                    }
+                });
+
+                star.addEventListener('click', () => {
+                    const rating = star.dataset.rating;
+                    stars.forEach(s => {
+                        if (s.dataset.rating <= rating) {
+                            s.classList.replace('far', 'fas');
+                        } else {
+                            s.classList.replace('fas', 'far');
+                        }
+                    });
+                });
+            });
+        });
+
+        // 遊戲載入動畫
+        function showLoadingAnimation(gameId) {
+            const gameSection = document.getElementById(gameId);
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>遊戲載入中...</p>
+                </div>
+            `;
+            gameSection.appendChild(loadingOverlay);
+        }
+
+        // 遊戲進度保存
+        function saveGameProgress(gameId, progress) {
+            localStorage.setItem(`game_progress_${gameId}`, JSON.stringify(progress));
+        }
+
+        function loadGameProgress(gameId) {
+            const progress = localStorage.getItem(`game_progress_${gameId}`);
+            return progress ? JSON.parse(progress) : null;
+        }
+
+        // 遊戲評分系統
+        function updateGameRating(gameId, rating) {
+            const gameSection = document.getElementById(gameId);
+            const stars = gameSection.querySelectorAll('.stars i');
+            const ratingScore = gameSection.querySelector('.rating-score');
+            const ratingCount = gameSection.querySelector('.rating-count');
+
+            // 更新星星顯示
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.replace('far', 'fas');
+                } else {
+                    star.classList.replace('fas', 'far');
+                }
+            });
+
+            // 更新評分數據
+            const currentRating = parseFloat(ratingScore.textContent);
+            const currentCount = parseInt(ratingCount.textContent);
+            const newCount = currentCount + 1;
+            const newRating = ((currentRating * currentCount) + rating) / newCount;
+
+            ratingScore.textContent = newRating.toFixed(1);
+            ratingCount.textContent = `(${newCount} 人評分)`;
+
+            // 保存評分數據
+            const ratings = JSON.parse(localStorage.getItem('game_ratings') || '{}');
+            ratings[gameId] = {
+                rating: newRating,
+                count: newCount
+            };
+            localStorage.setItem('game_ratings', JSON.stringify(ratings));
+        }
+
+        // 載入保存的評分數據
+        function loadGameRatings() {
+            const ratings = JSON.parse(localStorage.getItem('game_ratings') || '{}');
+            Object.entries(ratings).forEach(([gameId, data]) => {
+                const gameSection = document.getElementById(gameId);
+                if (gameSection) {
+                    const stars = gameSection.querySelectorAll('.stars i');
+                    const ratingScore = gameSection.querySelector('.rating-score');
+                    const ratingCount = gameSection.querySelector('.rating-count');
+
+                    stars.forEach((star, index) => {
+                        if (index < Math.round(data.rating)) {
+                            star.classList.replace('far', 'fas');
+                        }
+                    });
+
+                    ratingScore.textContent = data.rating.toFixed(1);
+                    ratingCount.textContent = `(${data.count} 人評分)`;
+                }
+            });
+        }
+
+        // 評論系統
+        function saveComment(gameId, comment) {
+            const comments = JSON.parse(localStorage.getItem('game_comments') || '{}');
+            if (!comments[gameId]) {
+                comments[gameId] = [];
+            }
+            comments[gameId].push(comment);
+            localStorage.setItem('game_comments', JSON.stringify(comments));
+        }
+
+        function loadComments() {
+            const comments = JSON.parse(localStorage.getItem('game_comments') || '{}');
+            Object.entries(comments).forEach(([gameId, gameComments]) => {
+                        const commentsList = document.getElementById(`${gameId}-comments`);
+                        if (commentsList) {
+                            gameComments.forEach(comment => {
+                                        const commentElement = document.createElement('div');
+                                        commentElement.className = 'comment';
+                                        commentElement.innerHTML = `
+                            <div class="comment-header">
+                                <span class="comment-username">${comment.username}</span>
+                                <span class="comment-date">${comment.date}</span>
+                            </div>
+                            <div class="comment-content">${comment.content}</div>
+                            <div class="comment-rating">
+                                ${Array(5).fill().map((_, i) => 
+                                    `<i class="${i < comment.rating ? 'fas' : 'far'} fa-star"></i>`
+                                ).join('')}
+                            </div>
+                        `;
+                        commentsList.appendChild(commentElement);
+                    });
+                }
+            });
+        }
+
+        document.querySelectorAll('.comment-form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const gameId = form.dataset.game;
+                const username = form.querySelector('[name="username"]').value;
+                const comment = form.querySelector('[name="comment"]').value;
+                const rating = form.querySelector('.stars-input .fas')?.dataset.rating || 0;
+
+                const commentData = {
+                    username,
+                    content: comment,
+                    rating: parseInt(rating),
+                    date: new Date().toLocaleDateString()
+                };
+
+                const commentsList = document.getElementById(`${gameId}-comments`);
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment';
+                commentElement.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-username">${username}</span>
+                        <span class="comment-date">${commentData.date}</span>
+                    </div>
+                    <div class="comment-content">${comment}</div>
+                    <div class="comment-rating">
+                        ${Array(5).fill().map((_, i) => 
+                            `<i class="${i < rating ? 'fas' : 'far'} fa-star"></i>`
+                        ).join('')}
+                    </div>
+                `;
+                commentsList.appendChild(commentElement);
+
+                // 保存評論
+                saveComment(gameId, commentData);
+
+                // 更新遊戲評分
+                updateGameRating(gameId, parseInt(rating));
+
+                // 清空表單
+                form.reset();
+                form.querySelectorAll('.stars-input i').forEach(star => {
+                    star.classList.replace('fas', 'far');
+                });
+            });
+        });
+
+        // 頁面載入時載入保存的數據
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGameRatings();
+            loadComments();
+        });
+
+        // Service Worker 註冊
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,26 @@
+{
+    "name": "遊戲天地",
+    "short_name": "遊戲天地",
+    "description": "精選網頁遊戲平台",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4CAF50",
+    "icons": [
+        {
+            "src": "assets/images/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "categories": ["games", "entertainment"],
+    "orientation": "any",
+    "lang": "zh-TW",
+    "dir": "ltr",
+    "prefer_related_applications": false
+} 
