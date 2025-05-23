@@ -229,34 +229,237 @@ function checkAndInitializeFeatures() {
 }
 
 // 安全的存儲操作
-function safeStorage(operation, key, value = null) {
-    try {
-        switch (operation) {
-            case 'get':
-                if (window.gameFeatures.localStorage) {
-                    return JSON.parse(localStorage.getItem(key) || 'null');
-                }
-                return window.memoryStorage[key];
-            case 'set':
-                if (window.gameFeatures.localStorage) {
-                    localStorage.setItem(key, JSON.stringify(value));
+class StorageManager {
+    constructor() {
+        this.initStorage();
+        this.retryAttempts = 3;
+        this.retryDelay = 1000;
+    }
+
+    initStorage() {
+        this.storageType = this.checkStorageAvailability();
+        if (this.storageType === 'memory') {
+            window.memoryStorage = window.memoryStorage || {};
+            window.ErrorHandler.logError({
+                message: '使用內存存儲模式',
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+
+    checkStorageAvailability() {
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            return 'localStorage';
+        } catch (e) {
+            window.ErrorHandler.logError({
+                message: 'LocalStorage 不可用',
+                error: e,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+            return 'memory';
+        }
+    }
+
+    async get(key, defaultValue = null) {
+        return this.retry(async () => {
+            try {
+                let value;
+                if (this.storageType === 'localStorage') {
+                    value = localStorage.getItem(key);
                 } else {
-                    window.memoryStorage[key] = value;
+                    value = window.memoryStorage[key];
                 }
-                break;
-            case 'remove':
-                if (window.gameFeatures.localStorage) {
+
+                if (value === null || value === undefined) {
+                    return defaultValue;
+                }
+
+                try {
+                    return JSON.parse(value);
+                } catch {
+                    return value;
+                }
+            } catch (e) {
+                throw new Error(`讀取數據失敗: ${key}`);
+            }
+        });
+    }
+
+    async set(key, value) {
+        return this.retry(async () => {
+            try {
+                const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
+
+                if (this.storageType === 'localStorage') {
+                    localStorage.setItem(key, serializedValue);
+                } else {
+                    window.memoryStorage[key] = serializedValue;
+                }
+
+                return true;
+            } catch (e) {
+                throw new Error(`保存數據失敗: ${key}`);
+            }
+        });
+    }
+
+    async remove(key) {
+        return this.retry(async () => {
+            try {
+                if (this.storageType === 'localStorage') {
                     localStorage.removeItem(key);
                 } else {
                     delete window.memoryStorage[key];
                 }
-                break;
+                return true;
+            } catch (e) {
+                throw new Error(`删除數據失敗: ${key}`);
+            }
+        });
+    }
+
+    async clear() {
+        return this.retry(async () => {
+            try {
+                if (this.storageType === 'localStorage') {
+                    localStorage.clear();
+                } else {
+                    window.memoryStorage = {};
+                }
+                return true;
+            } catch (e) {
+                throw new Error('清空數據失敗');
+            }
+        });
+    }
+
+    async keys() {
+        return this.retry(async () => {
+            try {
+                if (this.storageType === 'localStorage') {
+                    return Object.keys(localStorage);
+                } else {
+                    return Object.keys(window.memoryStorage);
+                }
+            } catch (e) {
+                throw new Error('獲取鍵列表失敗');
+            }
+        });
+    }
+
+    // 重試機制
+    async retry(operation) {
+        let lastError;
+        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                if (attempt < this.retryAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+                    this.retryDelay *= 2; // 指數退避
+                }
+
+                // 記錄重試嘗試
+                window.ErrorHandler.logError({
+                    message: `${error.message} (嘗試 ${attempt}/${this.retryAttempts})`,
+                    error: error,
+                    level: attempt === this.retryAttempts ? 
+                          window.ErrorHandler.errorLevels.ERROR : 
+                          window.ErrorHandler.errorLevels.WARNING
+                });
+
+                // 如果是 localStorage 錯誤且最後一次嘗試失敗，切換到內存存儲
+                if (attempt === this.retryAttempts && this.storageType === 'localStorage') {
+                    this.switchToMemoryStorage();
+                }
+            }
         }
-    } catch (e) {
-        console.error('存儲操作錯誤:', e);
-        NotificationSystem.show('存儲操作失敗', 'error');
+        throw lastError;
+    }
+
+    // 切換到內存存儲
+    switchToMemoryStorage() {
+        this.storageType = 'memory';
+        window.memoryStorage = window.memoryStorage || {};
+        window.ErrorHandler.logError({
+            message: '已切換至內存存儲模式',
+            level: window.ErrorHandler.errorLevels.WARNING
+        });
+    }
+
+    // 維護操作
+    async maintenance() {
+        try {
+            // 檢查並清理過期數據
+            const keys = await this.keys();
+            const cleanupTasks = keys.map(async key => {
+                const value = await this.get(key);
+                if (this.isExpired(value)) {
+                    await this.remove(key);
+                }
+            });
+
+            await Promise.all(cleanupTasks);
+
+            // 檢查存儲空間使用情況
+            if (this.storageType === 'localStorage') {
+                this.checkStorageQuota();
+            }
+
+        } catch (error) {
+            window.ErrorHandler.logError({
+                message: '存儲維護失敗',
+                error: error,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+
+    // 檢查數據是否過期
+    isExpired(value) {
+        if (value && value.expireAt) {
+            return new Date(value.expireAt).getTime() < Date.now();
+        }
+        return false;
+    }
+
+    // 檢查存儲配額使用情況
+    checkStorageQuota() {
+        try {
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length * 2; // UTF-16 編碼，每個字符 2 字節
+                }
+            }
+
+            const quotaPercentage = (totalSize / (5 * 1024 * 1024)) * 100; // 假設配額為 5MB
+            if (quotaPercentage > 80) {
+                window.ErrorHandler.logError({
+                    message: `存儲空間使用率高: ${Math.round(quotaPercentage)}%`,
+                    level: window.ErrorHandler.errorLevels.WARNING
+                });
+            }
+        } catch (error) {
+            window.ErrorHandler.logError({
+                message: '檢查存儲配額失敗',
+                error: error,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
     }
 }
+
+// 創建全局存儲管理器實例
+window.storageManager = new StorageManager();
+
+// 定期執行存儲維護
+setInterval(() => {
+    window.storageManager.maintenance();
+}, 30 * 60 * 1000); // 每30分鐘執行一次
 
 // 改進的圖片載入處理
 function handleImageLoad(img) {
@@ -1176,3 +1379,311 @@ function initializeAnalytics() {
         navigator.serviceWorker.register('service-worker.js').catch(()=>{});
     }
 }
+
+// Service Worker 註冊與錯誤處理
+async function registerServiceWorker() {
+    // 檢查是否支援 Service Worker
+    if (!('serviceWorker' in navigator)) {
+        console.warn('瀏覽器不支援 Service Worker');
+        NotificationSystem.show('瀏覽器不支援離線功能', 'warning');
+        return;
+    }
+
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    async function attemptRegistration() {
+        try {
+            // 檢查是否已經註冊
+            const existingRegistration = await navigator.serviceWorker.getRegistration();
+            if (existingRegistration) {
+                console.log('Service Worker 已註冊');
+                monitorServiceWorker(existingRegistration);
+                return true;
+            }
+
+            // 嘗試註冊
+            const registration = await navigator.serviceWorker.register('./service-worker.js');
+            console.log('Service Worker 註冊成功');
+            
+            // 監控 Service Worker 狀態
+            monitorServiceWorker(registration);
+            return true;
+        } catch (error) {
+            console.error('Service Worker 註冊失敗:', error);
+            NotificationSystem.show('離線功能啟用失敗，正在重試...', 'error');
+            
+            // 記錄錯誤日誌
+            addErrorLog({
+                message: 'Service Worker 註冊失敗',
+                error: error,
+                type: 'error'
+            });
+            
+            return false;
+        }
+    }
+
+    // 開始註冊流程
+    while (retryCount < maxRetries) {
+        if (await attemptRegistration()) {
+            break;
+        }
+        retryCount++;
+        if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // 5秒後重試
+        }
+    }
+
+    if (retryCount === maxRetries) {
+        NotificationSystem.show('離線功能啟用失敗，請稍後再試', 'error', {
+            duration: 8000
+        });
+    }
+}
+
+// Service Worker 狀態監控
+function monitorServiceWorker(registration) {
+    registration.addEventListener('statechange', (e) => {
+        console.log('Service Worker 狀態變更:', e.target.state);
+        
+        // 記錄重要狀態變更
+        if (e.target.state === 'redundant') {
+            NotificationSystem.show('Service Worker 已停用，請重新整理頁面', 'warning');
+            addErrorLog({
+                message: 'Service Worker 進入 redundant 狀態',
+                type: 'warning'
+            });
+        }
+    });
+
+    // 監控更新
+    registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                NotificationSystem.show('新版本可用，請重新整理頁面以更新', 'info', {
+                    duration: 0,
+                    closeable: true
+                });
+            }
+        });
+    });
+}
+
+// 存儲操作輔助函數
+async function safeStorageOperation(operation, key, value = null) {
+    try {
+        switch (operation) {
+            case 'get':
+                return await window.storageManager.get(key, null);
+            case 'set':
+                return await window.storageManager.set(key, value);
+            case 'remove':
+                return await window.storageManager.remove(key);
+            case 'clear':
+                return await window.storageManager.clear();
+            case 'keys':
+                return await window.storageManager.keys();
+            default:
+                throw new Error('無效的存儲操作');
+        }
+    } catch (error) {
+        // 記錄錯誤
+        window.ErrorHandler.logError({
+            message: `存儲操作失敗: ${operation}`,
+            error: error,
+            level: window.ErrorHandler.errorLevels.ERROR,
+            context: {
+                operation,
+                key,
+                hasValue: value !== null
+            }
+        });
+
+        // 根據操作類型返回安全的預設值
+        switch (operation) {
+            case 'get':
+                return null;
+            case 'set':
+            case 'remove':
+            case 'clear':
+                return false;
+            case 'keys':
+                return [];
+            default:
+                return null;
+        }
+    }
+}
+
+// 存儲系統監控
+const StorageMonitor = {
+    metrics: {
+        operations: {
+            total: 0,
+            successful: 0,
+            failed: 0
+        },
+        timing: {
+            min: Infinity,
+            max: 0,
+            avg: 0,
+            samples: []
+        },
+        errors: {
+            byType: {},
+            recent: []
+        }
+    },
+
+    // 重置指標
+    reset() {
+        this.metrics = {
+            operations: {
+                total: 0,
+                successful: 0,
+                failed: 0
+            },
+            timing: {
+                min: Infinity,
+                max: 0,
+                avg: 0,
+                samples: []
+            },
+            errors: {
+                byType: {},
+                recent: []
+            }
+        };
+    },
+
+    // 記錄操作
+    recordOperation(operation, success, duration) {
+        this.metrics.operations.total++;
+        if (success) {
+            this.metrics.operations.successful++;
+        } else {
+            this.metrics.operations.failed++;
+        }
+
+        // 更新時間統計
+        this.metrics.timing.samples.push(duration);
+        this.metrics.timing.min = Math.min(this.metrics.timing.min, duration);
+        this.metrics.timing.max = Math.max(this.metrics.timing.max, duration);
+        this.metrics.timing.avg = this.metrics.timing.samples.reduce((a, b) => a + b, 0) / 
+                                 this.metrics.timing.samples.length;
+
+        // 限制樣本數量
+        if (this.metrics.timing.samples.length > 100) {
+            this.metrics.timing.samples.shift();
+        }
+    },
+
+    // 記錄錯誤
+    recordError(error, operation) {
+        const errorType = error.name || 'Unknown';
+        this.metrics.errors.byType[errorType] = (this.metrics.errors.byType[errorType] || 0) + 1;
+
+        this.metrics.errors.recent.push({
+            timestamp: new Date(),
+            operation,
+            error: {
+                type: errorType,
+                message: error.message,
+                stack: error.stack
+            }
+        });
+
+        // 限制最近錯誤數量
+        if (this.metrics.errors.recent.length > 10) {
+            this.metrics.errors.recent.shift();
+        }
+    },
+
+    // 獲取效能報告
+    getPerformanceReport() {
+        return {
+            successRate: this.metrics.operations.successful / this.metrics.operations.total * 100,
+            averageResponseTime: this.metrics.timing.avg,
+            errorRate: this.metrics.operations.failed / this.metrics.operations.total * 100,
+            mostCommonErrors: Object.entries(this.metrics.errors.byType)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+        };
+    },
+
+    // 監控警告
+    checkWarningThresholds() {
+        const report = this.getPerformanceReport();
+        
+        if (report.errorRate > 10) {
+            window.ErrorHandler.logError({
+                message: `存儲系統錯誤率過高: ${report.errorRate.toFixed(2)}%`,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+
+        if (report.averageResponseTime > 1000) {
+            window.ErrorHandler.logError({
+                message: `存儲系統回應時間過長: ${report.averageResponseTime.toFixed(2)}ms`,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+};
+
+// 將監控添加到 StorageManager
+Object.assign(StorageManager.prototype, {
+    async monitoredOperation(operation, func) {
+        const startTime = performance.now();
+        try {
+            const result = await func();
+            const duration = performance.now() - startTime;
+            StorageMonitor.recordOperation(operation, true, duration);
+            return result;
+        } catch (error) {
+            const duration = performance.now() - startTime;
+            StorageMonitor.recordOperation(operation, false, duration);
+            StorageMonitor.recordError(error, operation);
+            throw error;
+        }
+    }
+});
+
+// 覆蓋 StorageManager 的方法以添加監控
+const originalMethods = {
+    get: StorageManager.prototype.get,
+    set: StorageManager.prototype.set,
+    remove: StorageManager.prototype.remove,
+    clear: StorageManager.prototype.clear,
+    keys: StorageManager.prototype.keys
+};
+
+StorageManager.prototype.get = async function(key, defaultValue) {
+    return this.monitoredOperation('get', () => originalMethods.get.call(this, key, defaultValue));
+};
+
+StorageManager.prototype.set = async function(key, value) {
+    return this.monitoredOperation('set', () => originalMethods.set.call(this, key, value));
+};
+
+StorageManager.prototype.remove = async function(key) {
+    return this.monitoredOperation('remove', () => originalMethods.remove.call(this, key));
+};
+
+StorageManager.prototype.clear = async function() {
+    return this.monitoredOperation('clear', () => originalMethods.clear.call(this));
+};
+
+StorageManager.prototype.keys = async function() {
+    return this.monitoredOperation('keys', () => originalMethods.keys.call(this));
+};
+
+// 定期檢查警告閾值
+setInterval(() => {
+    StorageMonitor.checkWarningThresholds();
+}, 5 * 60 * 1000); // 每5分鐘檢查一次
+
+// 導出監控系統供其他模組使用
+window.StorageMonitor = StorageMonitor;
