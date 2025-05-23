@@ -173,7 +173,6 @@
             });
         });
     </script>
-    <script src="assets/js/comments.js"></script>
 </head>
 
 <body>
@@ -705,19 +704,25 @@
             const ratings = JSON.parse(localStorage.getItem('game_ratings') || '{}');
             Object.entries(ratings).forEach(([gameId, data]) => {
                 const gameSection = document.getElementById(gameId);
-                if (gameSection) {
-                    const stars = gameSection.querySelectorAll('.stars i');
-                    const ratingScore = gameSection.querySelector('.rating-score');
-                    const ratingCount = gameSection.querySelector('.rating-count');
-
+                if (!gameSection) return;
+                const ratingScore = gameSection.querySelector('.rating-score');
+                const ratingCount = gameSection.querySelector('.rating-count');
+                const stars = gameSection.querySelectorAll('.stars i');
+                if (typeof data.rating === 'number' && !isNaN(data.rating) && typeof data.count === 'number' && data.count > 0) {
                     stars.forEach((star, index) => {
                         if (index < Math.round(data.rating)) {
                             star.classList.replace('far', 'fas');
+                        } else {
+                            star.classList.replace('fas', 'far');
                         }
                     });
-
                     ratingScore.textContent = data.rating.toFixed(1);
                     ratingCount.textContent = `(${data.count} 人評分)`;
+                } else {
+                    // 若資料異常，顯示預設值
+                    stars.forEach(star => star.classList.replace('fas', 'far'));
+                    ratingScore.textContent = '0.0';
+                    ratingCount.textContent = '(0 人評分)';
                 }
             });
         }

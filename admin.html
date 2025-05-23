@@ -876,14 +876,30 @@
         }
 
         // 更新圖表
-        function updateCharts(ratings, comments) {
-            const ctx = document.getElementById('ratingsChart').getContext('2d');
+        function updateCharts(statsOrRatings, comments) {
+            // 支援兩種呼叫方式：updateCharts(stats) 或 updateCharts(ratings, comments)
+            let ratings, gameComments;
+            if (arguments.length === 2) {
+                ratings = statsOrRatings;
+                gameComments = comments;
+            } else if (arguments.length === 1 && statsOrRatings && statsOrRatings.gameStats) {
+                // 來自 updateStats 主流程
+                ratings = {};
+                gameComments = {};
+                Object.entries(statsOrRatings.gameStats).forEach(([name, stat]) => {
+                    ratings[name] = { rating: stat.rating || 0, count: stat.plays || 0 };
+                    gameComments[name] = [];
+                });
+            } else {
+                return;
+            }
+            const chartEl = document.getElementById('ratingsChart');
+            if (!chartEl) return; // 防呆：canvas 不存在不執行
+            const ctx = chartEl.getContext('2d');
             if (!ctx) return;
-
             const gameNames = Object.keys(ratings);
-            const ratingData = gameNames.map(game => ratings[game].rating);
-            const commentData = gameNames.map(game => (comments[game] ? comments[game].length : 0));
-
+            const ratingData = gameNames.map(game => ratings[game].rating || 0);
+            const commentData = gameNames.map(game => (gameComments[game] ? gameComments[game].length : 0));
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -920,6 +936,7 @@
                     localStorage.removeItem('game_ratings');
                     localStorage.removeItem('game_comments');
                     loadGameStats();
+                    initCharts(); // 新增：清除資料後重建圖表
                     showSuccess('資料已清除');
                 } catch (error) {
                     showError('清除資料失敗：' + error.message);
