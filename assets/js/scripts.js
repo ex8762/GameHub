@@ -27,9 +27,11 @@ async function loadScripts() {
         // 載入通知系統樣式
         await loadCSS('assets/css/notification.css');
         
-        // 首先載入錯誤處理和通知系統
-        await loadScript('assets/js/notification.js');
-        await loadScript('assets/js/error-handler.js');
+        // 確保依賴關係正確，先載入基礎模組
+        await Promise.all([
+            loadScript('assets/js/error-handler.js'),
+            loadScript('assets/js/notification.js')
+        ]);
         
         // 載入存儲管理器
         await loadScript('assets/js/storage-manager.js');

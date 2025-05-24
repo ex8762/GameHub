@@ -1,5 +1,6 @@
 // 統一的錯誤處理系統
-class ErrorHandler {    constructor() {
+window.ErrorHandler = window.ErrorHandler || class ErrorHandler {
+    constructor() {
         this.maxLogs = 1000; // 提高最大日志数量
         this.errorLevels = {
             DEBUG: 0,

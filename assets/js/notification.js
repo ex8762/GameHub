@@ -27,17 +27,49 @@ window.NotificationSystem = window.NotificationSystem || {
 
         // 初始化音效
         this.initSounds();
-    },
-
-    initSounds() {
+    },    async initSounds() {
         const soundsPath = 'assets/sounds/';
-        Object.entries(this.sounds).forEach(([type, filename]) => {
+        const defaultSounds = {
+            info: null,  // 資訊提示不播放音效
+            success: 'success-sound',
+            warning: 'warning-sound',
+            error: 'error-sound'
+        };
+
+        // 重置音效設定
+        this.sounds = {...defaultSounds};
+        
+        // 靜默載入音效
+        for (const [type, filename] of Object.entries(this.sounds)) {
             if (filename) {
-                const audio = new Audio(`${soundsPath}${filename}.mp3`);
+                const audio = new Audio();
                 audio.preload = 'auto';
-                this.sounds[type] = audio;
+                
+                try {
+                    audio.src = `${soundsPath}${filename}.mp3`;
+                    // 使用 Promise 處理載入
+                    await new Promise((resolve) => {
+                        audio.addEventListener('canplaythrough', resolve, { once: true });
+                        audio.addEventListener('error', () => {
+                            console.warn(`音效載入失敗: ${filename}.mp3`);
+                            resolve();
+                        }, { once: true });
+                        
+                        // 設置載入超時
+                        setTimeout(resolve, 2000);
+                    });
+                    
+                    if (audio.error) {
+                        this.sounds[type] = null;
+                    } else {
+                        this.sounds[type] = audio;
+                    }
+                } catch (error) {
+                    console.warn(`音效初始化失敗: ${filename}`, error);
+                    this.sounds[type] = null;
+                }
             }
-        });
+        }
     },
 
     show(message, type = 'info', options = {}) {

@@ -8,14 +8,19 @@ const CACHE_STRATEGY = {
     api: 'network-only'
 };
 
-// 預快取資源列表
+// 更新快取資源列表，包含音效檔案
 const PRE_CACHE_URLS = [
     '/',
     OFFLINE_PAGE,
     '/index.html',
-    '/assets/css/style.css',
+    '/assets/css/styles.css',
+    '/assets/css/notification.css',
     '/assets/js/main.js',
-    '/assets/js/error-handler.js'
+    '/assets/js/error-handler.js',
+    '/assets/js/notification.js',
+    '/assets/sounds/success-sound.mp3',
+    '/assets/sounds/warning-sound.mp3',
+    '/assets/sounds/error-sound.mp3'
 ];
 
 // 快取存活時間(毫秒)
@@ -25,6 +30,31 @@ const CACHE_TTL = {
     scripts: 12 * 60 * 60 * 1000,     // 12小時
     api: 5 * 60 * 1000                // 5分鐘
 };
+
+// 資源載入重試機制
+async function fetchWithRetry(request, maxRetries = 3) {
+    let lastError;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(request);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response;
+        } catch (error) {
+            lastError = error;
+            // 等待一段時間後重試
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+        }
+    }
+    
+    // 如果是導航請求，返回離線頁面
+    if (request.mode === 'navigate') {
+        const cache = await caches.open(CACHE_NAME);
+        return cache.match(OFFLINE_PAGE);
+    }
+    
+    throw lastError;
+}
 
 // 安裝事件 - 預快取重要資源
 self.addEventListener('install', event => {
@@ -60,6 +90,47 @@ async function isCacheExpired(response, type) {
     return age > CACHE_TTL[type];
 }
 
+// 快取優先策略
+async function cacheFirst(request) {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    
+    if (cached) return cached;
+    
+    try {
+        const response = await fetchWithRetry(request);
+        cache.put(request, response.clone());
+        return response;
+    } catch (error) {
+        // 如果是圖片，返回預設圖片
+        if (request.destination === 'image') {
+            return cache.match('/assets/images/placeholder.svg');
+        }
+        throw error;
+    }
+}
+
+// 網路優先策略
+async function networkFirst(request) {
+    try {
+        const response = await fetchWithRetry(request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, response.clone());
+        return response;
+    } catch (error) {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        
+        // 如果是導航請求，返回離線頁面
+        if (request.mode === 'navigate') {
+            const cache = await caches.open(CACHE_NAME);
+            return cache.match(OFFLINE_PAGE);
+        }
+        
+        throw error;
+    }
+}
+
 // 網路請求策略
 async function handleFetch(request) {
     const resourceType = getResourceType(request.url);
@@ -68,13 +139,13 @@ async function handleFetch(request) {
     try {
         switch (strategy) {
             case 'cache-first':
-                return await handleCacheFirst(request, resourceType);
+                return await cacheFirst(request, resourceType);
             case 'network-first':
-                return await handleNetworkFirst(request, resourceType);
+                return await networkFirst(request, resourceType);
             case 'network-only':
                 return await handleNetworkOnly(request);
             default:
-                return await handleNetworkFirst(request, resourceType);
+                return await networkFirst(request, resourceType);
         }
     } catch (error) {
         console.error(`請求處理失敗: ${request.url}`, error);
@@ -84,40 +155,6 @@ async function handleFetch(request) {
             return caches.match(OFFLINE_PAGE);
         }
         
-        throw error;
-    }
-}
-
-// Cache-First 策略
-async function handleCacheFirst(request, resourceType) {
-    const cache = await caches.open(CACHE_NAME);
-    const cachedResponse = await cache.match(request);
-    
-    if (cachedResponse && !(await isCacheExpired(cachedResponse, resourceType))) {
-        return cachedResponse;
-    }
-    
-    try {
-        const networkResponse = await fetch(request);
-        await cache.put(request, networkResponse.clone());
-        return networkResponse;
-    } catch (error) {
-        return cachedResponse || error;
-    }
-}
-
-// Network-First 策略
-async function handleNetworkFirst(request, resourceType) {
-    try {
-        const networkResponse = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, networkResponse.clone());
-        return networkResponse;
-    } catch (error) {
-        const cachedResponse = await caches.match(request);
-        if (cachedResponse && !(await isCacheExpired(cachedResponse, resourceType))) {
-            return cachedResponse;
-        }
         throw error;
     }
 }
