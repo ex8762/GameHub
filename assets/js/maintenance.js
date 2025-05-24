@@ -1,23 +1,22 @@
 // 自動化維護系統
-class MaintenanceSystem {
-    constructor() {
-        this.tasks = [];
-        this.logs = [];
-        this.maxLogs = 100;
-        this.isRunning = false;
-    }
+const MaintenanceSystem = {
+    tasks: [],
+    logs: [],
+    maxLogs: 100,
+    isRunning: false,
 
-    /**
-     * 初始化維護系統
-     */
     init() {
         // 註冊預設維護任務
         this.registerTask('checkStorage', async () => {
-            await window.StorageManager.maintenance();
+            if (window.StorageManager && typeof window.StorageManager.cleanup === 'function') {
+                await window.StorageManager.cleanup();
+            }
         }, 30 * 60 * 1000); // 每30分鐘
         
         this.registerTask('syncErrors', async () => {
-            await window.ErrorHandler.syncPendingErrors();
+            if (window.ErrorHandler && typeof window.ErrorHandler.syncPendingErrors === 'function') {
+                await window.ErrorHandler.syncPendingErrors();
+            }
         }, 5 * 60 * 1000); // 每5分鐘
         
         this.registerTask('cleanCache', async () => {
@@ -31,11 +30,8 @@ class MaintenanceSystem {
         window.addEventListener('beforeunload', () => {
             this.logMaintenanceStatus();
         });
-    }
+    },
 
-    /**
-     * 註冊維護任務
-     */
     registerTask(name, callback, interval) {
         this.tasks.push({
             name,
@@ -44,134 +40,55 @@ class MaintenanceSystem {
             lastRun: 0,
             status: 'pending'
         });
-    }
+    },
 
-    /**
-     * 開始執行任務
-     */
     startTasks() {
-        if (this.isRunning) return;
         this.isRunning = true;
-        
-        setInterval(() => {
-            this.checkAndRunTasks();
-        }, 60000); // 每分鐘檢查一次
-    }
-
-    /**
-     * 檢查並執行任務
-     */
-    async checkAndRunTasks() {
-        const now = Date.now();
-        
-        for (const task of this.tasks) {
-            if (now - task.lastRun >= task.interval) {
+        this.tasks.forEach(task => {
+            setInterval(async () => {
                 try {
-                    task.status = 'running';
                     await task.callback();
-                    task.lastRun = now;
-                    task.status = 'completed';
-                    
-                    this.log({
-                        type: 'success',
-                        task: task.name,
-                        timestamp: new Date().toISOString()
-                    });
-                } catch (error) {
-                    task.status = 'failed';
-                    
-                    this.log({
-                        type: 'error',
-                        task: task.name,
-                        error: error.message,
-                        timestamp: new Date().toISOString()
-                    });
-                    
-                    window.ErrorHandler.logError({
-                        message: `維護任務失敗: ${task.name}`,
-                        error: error,
-                        level: window.ErrorHandler.errorLevels.ERROR
-                    });
+                    task.lastRun = Date.now();
+                    task.status = 'success';
+                } catch (e) {
+                    task.status = 'error';
+                    this.logError(e);
                 }
-            }
-        }
-    }
+            }, task.interval);
+        });
+    },
 
-    /**
-     * 清理快取
-     */
-    async cleanCache() {
-        try {
-            if ('caches' in window) {
-                const keys = await caches.keys();
-                await Promise.all(
-                    keys.map(key => {
-                        // 保留最新版本的快取
-                        if (key !== 'game-cache-v1') {
-                            return caches.delete(key);
-                        }
-                    })
-                );
-            }
-        } catch (error) {
-            throw new Error('清理快取失敗: ' + error.message);
-        }
-    }
-
-    /**
-     * 記錄維護日誌
-     */
-    log(entry) {
-        this.logs.unshift(entry);
-        
+    logError(error) {
+        this.logs.push({
+            time: new Date().toISOString(),
+            error: error.message || String(error)
+        });
         if (this.logs.length > this.maxLogs) {
-            this.logs.pop();
+            this.logs.shift();
         }
-        
-        // 儲存日誌
-        try {
-            window.storageManager.set('maintenance_logs', this.logs);
-        } catch (error) {
-            console.error('儲存維護日誌失敗:', error);
+        if (window.ErrorHandler && typeof window.ErrorHandler.handleError === 'function') {
+            window.ErrorHandler.handleError(error);
         }
-    }
+    },
 
-    /**
-     * 取得維護狀態報告
-     */
-    getStatusReport() {
-        return {
-            tasks: this.tasks.map(task => ({
-                name: task.name,
-                status: task.status,
-                lastRun: task.lastRun ? new Date(task.lastRun).toISOString() : null,
-                nextRun: task.lastRun ? new Date(task.lastRun + task.interval).toISOString() : null
-            })),
-            recentLogs: this.logs.slice(0, 10)
-        };
-    }
-
-    /**
-     * 記錄維護狀態
-     */
     logMaintenanceStatus() {
-        const status = this.getStatusReport();
-        
-        try {
-            window.storageManager.set('maintenance_status', {
-                timestamp: new Date().toISOString(),
-                status: status
+        // 可根據需求擴充
+        if (window.StorageManager) {
+            const report = window.StorageManager.getStorageReport ? window.StorageManager.getStorageReport() : {};
+            this.logs.push({
+                time: new Date().toISOString(),
+                status: 'shutdown',
+                storage: report
             });
-        } catch (error) {
-            console.error('儲存維護狀態失敗:', error);
         }
+    },
+
+    async cleanCache() {
+        // 實作快取清理邏輯
     }
-}
+};
 
-// 創建全局維護系統實例
-window.maintenanceSystem = new MaintenanceSystem();
-
-// 當文檔載入完成時初始化
 document.addEventListener('DOMContentLoaded', () => {
-    window.maintenanceSystem.init();
+    MaintenanceSystem.init();
+    window.MaintenanceSystem = MaintenanceSystem;
 });
