@@ -154,7 +154,7 @@ class ErrorHandler {
     /**
      * 保存錯誤日誌到本地存儲
      */
-    saveLog(errorLog) {
+    storeError(errorLog) {
         try {
             const logs = JSON.parse(localStorage.getItem('errorLogs') || '[]');
             logs.unshift(errorLog);
@@ -189,7 +189,7 @@ class ErrorHandler {
         const type = notificationTypes[errorLog.level] || 'error';
         const duration = errorLog.level >= this.errorLevels.ERROR ? 8000 : 5000;
 
-        NotificationSystem.show(errorLog.message, type, {
+        window.NotificationSystem.show(errorLog.message, type, {
             duration,
             closeable: true
         });

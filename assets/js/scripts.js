@@ -1,16 +1,3 @@
-// 主要的JavaScript檔案載入順序管理
-
-// 共用變數
-window.gameConfig = {
-    version: '1.0.0',
-    debug: false,
-    features: {
-        offlineSupport: true,
-        localStorageSupport: true,
-        serviceWorkerSupport: 'serviceWorker' in navigator
-    }
-};
-
 // 載入所需的JavaScript文件
 function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -22,9 +9,26 @@ function loadScript(src) {
     });
 }
 
+// 載入所需的CSS文件
+function loadCSS(href) {
+    return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = resolve;
+        link.onerror = reject;
+        document.head.appendChild(link);
+    });
+}
+
 // 依順序載入所有必要的指令碼
 async function loadScripts() {
-    try {        // 首先載入錯誤處理
+    try {
+        // 載入通知系統樣式
+        await loadCSS('assets/css/notification.css');
+        
+        // 首先載入錯誤處理和通知系統
+        await loadScript('assets/js/notification.js');
         await loadScript('assets/js/error-handler.js');
         
         // 載入存儲管理器
@@ -46,8 +50,8 @@ async function loadScripts() {
         initializeApp();
     } catch (error) {
         console.error('載入指令碼失敗:', error);
-        // 使用一般alert,因為此時NotificationSystem可能還未載入
-        alert('應用程式載入失敗,請重新整理頁面');
+        // 使用一般alert，因為此時NotificationSystem可能還未載入
+        alert('應用程式載入失敗，請重新整理頁面');
     }
 }
 
@@ -69,5 +73,5 @@ function initializeApp() {
     }
 }
 
-// 當文檔載入完成時開始載入指令碼
+// 在文檔載入完成後開始載入指令碼
 document.addEventListener('DOMContentLoaded', loadScripts);
