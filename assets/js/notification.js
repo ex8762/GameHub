@@ -28,7 +28,7 @@ window.NotificationSystem = window.NotificationSystem || {
         // 初始化音效
         this.initSounds();
     },    async initSounds() {
-        const soundsPath = 'assets/sounds/';
+        const soundsPath = '/assets/sounds/';
         const defaultSounds = {
             info: null,  // 資訊提示不播放音效
             success: 'success-sound',
@@ -42,12 +42,18 @@ window.NotificationSystem = window.NotificationSystem || {
         // 靜默載入音效
         for (const [type, filename] of Object.entries(this.sounds)) {
             if (filename) {
-                const audio = new Audio();
-                audio.preload = 'auto';
-                
                 try {
+                    const audio = new Audio();
+                    audio.preload = 'auto';
                     audio.src = `${soundsPath}${filename}.mp3`;
-                    // 使用 Promise 處理載入
+                    
+                    // 使用 Promise 處理載入並加入錯誤處理
+                    await new Promise((resolve, reject) => {
+                        audio.oncanplaythrough = resolve;
+                        audio.onerror = () => {
+                            console.warn(`無法載入音效: ${filename}`);
+                            resolve(); // 即使載入失敗也繼續執行
+                        };
                     await new Promise((resolve) => {
                         audio.addEventListener('canplaythrough', resolve, { once: true });
                         audio.addEventListener('error', () => {

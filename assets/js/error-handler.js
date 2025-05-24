@@ -37,13 +37,24 @@ window.ErrorHandler = window.ErrorHandler || class ErrorHandler {
                 quota: 0
             }
         };
-    }
-
-    /**
+    }    /**
      * 初始化錯誤處理系統
-     */    async init() {
-        // 设置全局错误处理
+     */    
+    async init() {
+        // 設置全局錯誤處理
         window.onerror = (message, source, lineno, colno, error) => {
+            // 如果錯誤與資源載入相關，不要發送到服務器
+            if (message.includes('Failed to load resource') || 
+                message.includes('net::ERR_FAILED')) {
+                console.warn('Resource loading error:', {
+                    message,
+                    source,
+                    lineno,
+                    colno
+                });
+                return;
+            }
+            
             this.logError({
                 message: message,
                 source: source,

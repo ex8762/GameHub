@@ -31,6 +31,14 @@ if (!fs.existsSync(commentsFilePath)) {
     fs.writeFileSync(commentsFilePath, JSON.stringify(initialComments, null, 2));
 }
 
+// 錯誤日誌存儲路徑
+const errorLogsPath = path.join(__dirname, 'data', 'error-logs');
+
+// 確保錯誤日誌目錄存在
+if (!fs.existsSync(errorLogsPath)) {
+    fs.mkdirSync(errorLogsPath, { recursive: true });
+}
+
 // API路由 - 獲取評論
 app.get('/api/comments/:gameId', (req, res) => {
     try {
@@ -69,6 +77,61 @@ app.post('/api/comments/:gameId', (req, res) => {
         res.status(500).json({ error: '無法添加評論' });
     }
 });
+
+// API路由 - 記錄錯誤
+app.post('/api/log-error', (req, res) => {
+    try {
+        const errorLog = req.body;
+        const timestamp = new Date().toISOString().split('T')[0];
+        const logFile = path.join(errorLogsPath, `errors-${timestamp}.json`);
+        
+        // 讀取當天的日誌文件
+        let logs = [];
+        if (fs.existsSync(logFile)) {
+            logs = JSON.parse(fs.readFileSync(logFile, 'utf8'));
+        }
+        
+        // 添加新的錯誤日誌
+        logs.push({
+            ...errorLog,
+            timestamp: new Date().toISOString()
+        });
+        
+        // 寫入文件
+        fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
+        
+        res.status(200).json({ message: '錯誤日誌已記錄' });
+    } catch (error) {
+        console.error('記錄錯誤失敗:', error);
+        res.status(500).json({ error: '無法記錄錯誤' });
+    }
+});
+
+// 定期清理舊的錯誤日誌文件 (保留最近30天)
+const cleanupErrorLogs = () => {
+    try {
+        const files = fs.readdirSync(errorLogsPath);
+        const now = new Date();
+        
+        files.forEach(file => {
+            const filePath = path.join(errorLogsPath, file);
+            const stat = fs.statSync(filePath);
+            const age = now - stat.mtime;
+            
+            // 如果文件超過30天就刪除
+            if (age > 30 * 24 * 60 * 60 * 1000) {
+                fs.unlinkSync(filePath);
+            }
+        });
+    } catch (error) {
+        console.error('清理錯誤日誌失敗:', error);
+    }
+};
+
+// 每天執行一次清理
+setInterval(cleanupErrorLogs, 24 * 60 * 60 * 1000);
+// 啟動時執行一次清理
+cleanupErrorLogs();
 
 // 處理所有其他請求，返回index.html
 app.get('*', (req, res) => {
