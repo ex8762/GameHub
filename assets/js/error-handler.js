@@ -1,7 +1,12 @@
 // 統一的錯誤處理系統
-class ErrorHandler {
-    constructor() {
-        this.maxLogs = 100;
+class ErrorHandler {    constructor() {
+        this.maxLogs = 1000; // 提高最大日志数量
+        this.maxLogAge = {
+            [this.errorLevels.ERROR]: 7 * 24 * 60 * 60 * 1000,    // 严重错误保留7天
+            [this.errorLevels.WARNING]: 3 * 24 * 60 * 60 * 1000,  // 警告保留3天
+            [this.errorLevels.INFO]: 24 * 60 * 60 * 1000,         // 信息保留1天
+            [this.errorLevels.DEBUG]: 12 * 60 * 60 * 1000         // 调试信息保留12小时
+        };
         this.errorLevels = {
             DEBUG: 0,
             INFO: 1, 
@@ -9,12 +14,14 @@ class ErrorHandler {
             ERROR: 3,
             CRITICAL: 4
         };
-        this.memoryWarningThreshold = 0.9; // 90% 記憶體使用率警告
+        this.memoryWarningThreshold = 0.9; // 90% 记忆体使用率警告
+        this.storageWarningThreshold = 0.8; // 80% 存储空间使用警告
         this.performanceMetrics = {
             errors: {
                 count: 0,
                 byType: {},
-                byLevel: {}
+                byLevel: {},
+                recentErrors: [] // 最近的错误
             },
             memory: {
                 usage: [],
@@ -23,15 +30,18 @@ class ErrorHandler {
             timing: {
                 avg: 0,
                 samples: []
+            },
+            storage: {
+                usage: 0,
+                quota: 0
             }
         };
     }
 
     /**
      * 初始化錯誤處理系統
-     */
-    init() {
-        // 設置全局錯誤處理
+     */    async init() {
+        // 设置全局错误处理
         window.onerror = (message, source, lineno, colno, error) => {
             this.logError({
                 message: message,
@@ -44,7 +54,7 @@ class ErrorHandler {
             return false;
         };
 
-        // 處理未捕獲的 Promise 錯誤
+        // 处理未捕获的 Promise 错误
         window.addEventListener('unhandledrejection', (event) => {
             this.logError({
                 message: 'Unhandled Promise Rejection',
@@ -53,7 +63,7 @@ class ErrorHandler {
             });
         });
 
-        // 監控網路狀態變化
+        // 监控网络状态变化
         window.addEventListener('online', () => {
             this.logError({
                 message: '網路已恢復連接',
@@ -69,11 +79,37 @@ class ErrorHandler {
             });
         });
         
-        // 定期檢查記憶體使用情況
+        // 初始化存储监控
+        if (navigator.storage && navigator.storage.estimate) {
+            try {
+                const {usage, quota} = await navigator.storage.estimate();
+                this.performanceMetrics.storage.usage = usage;
+                this.performanceMetrics.storage.quota = quota;
+                
+                if (usage / quota > this.storageWarningThreshold) {
+                    this.logError({
+                        message: `存儲空間使用率過高: ${((usage/quota)*100).toFixed(1)}%`,
+                        level: this.errorLevels.WARNING
+                    });
+                }
+            } catch (e) {
+                console.error('檢查存儲空間失敗:', e);
+            }
+        }
+        
+        // 定期检查内存使用情况
         this.startMemoryMonitoring();
         
-        // 定期同步錯誤日誌
+        // 定期同步错误日志
         this.startErrorSync();
+        
+        // 定期清理旧日志
+        setInterval(() => {
+            this.cleanOldLogs();
+        }, 6 * 60 * 60 * 1000); // 每6小时清理一次
+        
+        // 立即清理一次旧日志
+        await this.cleanOldLogs();
     }
 
     /**
@@ -149,24 +185,57 @@ class ErrorHandler {
         } else {
             this.queueErrorForSync(enrichedLog);
         }
-    }
-
-    /**
+    }    /**
      * 保存錯誤日誌到本地存儲
      */
-    storeError(errorLog) {
+    async storeError(errorLog) {
         try {
-            const logs = JSON.parse(localStorage.getItem('errorLogs') || '[]');
-            logs.unshift(errorLog);
+            // 检查储存空间
+            if (navigator.storage && navigator.storage.estimate) {
+                const {usage, quota} = await navigator.storage.estimate();
+                if (usage > quota * 0.9) { // 如果使用超过90%
+                    await this.cleanOldLogs(); // 清理旧日志
+                }
+            }
+
+            let logs = [];
+            try {
+                logs = JSON.parse(localStorage.getItem('errorLogs') || '[]');
+            } catch {
+                // 如果解析失败，使用空数组
+                logs = [];
+            }
+
+            // 添加新日志
+            logs.unshift({
+                ...errorLog,
+                timestamp: new Date().toISOString()
+            });
             
-            // 限制日誌數量
+            // 限制日志数量
             if (logs.length > this.maxLogs) {
                 logs.length = this.maxLogs;
             }
             
-            localStorage.setItem('errorLogs', JSON.stringify(logs));
+            // 压缩和保存数据
+            try {
+                const serializedLogs = JSON.stringify(logs);
+                localStorage.setItem('errorLogs', serializedLogs);
+            } catch (storageError) {
+                // 如果存储失败，尝试清理后重试
+                await this.cleanOldLogs();
+                localStorage.setItem('errorLogs', JSON.stringify(logs));
+            }
         } catch (e) {
             console.error('保存錯誤日誌失敗:', e);
+            // 如果实在无法保存，转为内存存储
+            if (!window.memoryErrorLogs) {
+                window.memoryErrorLogs = [];
+            }
+            window.memoryErrorLogs.unshift(errorLog);
+            if (window.memoryErrorLogs.length > this.maxLogs) {
+                window.memoryErrorLogs.length = this.maxLogs;
+            }
         }
     }
 
@@ -287,6 +356,42 @@ class ErrorHandler {
             localStorage.setItem('errorSyncQueue', JSON.stringify(failedErrors));
         } catch (e) {
             console.error('同步錯誤日誌失敗:', e);
+        }
+    }
+
+    /**
+     * 清理舊的錯誤日誌
+     */
+    async cleanOldLogs() {
+        try {
+            let logs = [];
+            try {
+                logs = JSON.parse(localStorage.getItem('errorLogs') || '[]');
+            } catch {
+                return; // 如果无法解析，直接返回
+            }
+
+            // 只保留最近7天的关键错误和最近3天的普通错误
+            const now = Date.now();
+            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+            const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+
+            logs = logs.filter(log => {
+                const logTime = new Date(log.timestamp).getTime();
+                if (log.level >= this.errorLevels.ERROR) {
+                    return (now - logTime) <= SEVEN_DAYS;
+                }
+                return (now - logTime) <= THREE_DAYS;
+            });
+
+            // 限制总数量
+            if (logs.length > this.maxLogs) {
+                logs.length = this.maxLogs;
+            }
+
+            localStorage.setItem('errorLogs', JSON.stringify(logs));
+        } catch (e) {
+            console.error('清理錯誤日誌失敗:', e);
         }
     }
 }
