@@ -81,9 +81,10 @@ var ErrorHandler = {
 };
 
 // 初始化錯誤處理器
-document.addEventListener("DOMContentLoaded", () => {
-    ErrorHandler.init();
-});
-
-// 導出到全局
-window.ErrorHandler = ErrorHandler;
+if (!window._errorHandlerInitialized) {
+    document.addEventListener("DOMContentLoaded", () => {
+        ErrorHandler.init();
+    });
+    window.ErrorHandler = ErrorHandler;
+    window._errorHandlerInitialized = true;
+}

@@ -224,9 +224,13 @@ class StorageSpaceManager {
 }
 
 // 創建全局實例
-window.storageSpaceManager = new StorageSpaceManager();
+window.StorageSpaceManager = new StorageSpaceManager();
 
 // 當文檔載入完成時初始化
-document.addEventListener('DOMContentLoaded', () => {
-    window.storageSpaceManager.init();
-});
+// 只初始化一次
+if (!window._storageSpaceManagerInitialized) {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.StorageSpaceManager.init();
+    });
+    window._storageSpaceManagerInitialized = true;
+}

@@ -95,14 +95,14 @@ class NotificationSystem {
 }
 
 // 初始化通知系統
-const notificationSystem = new NotificationSystem();
-document.addEventListener("DOMContentLoaded", () => {
-    notificationSystem.init();
-});
-
-// 導出全局函數
-window.showNotification = (message, type = "info", options = {}) => {
-    return notificationSystem.show(message, type, options);
-};
-
-window.NotificationSystem = notificationSystem;
+if (!window._notificationSystemInitialized) {
+    const notificationSystem = new NotificationSystem();
+    document.addEventListener("DOMContentLoaded", () => {
+        notificationSystem.init();
+    });
+    window.showNotification = (message, type = "info", options = {}) => {
+        return notificationSystem.show(message, type, options);
+    };
+    window.NotificationSystem = notificationSystem;
+    window._notificationSystemInitialized = true;
+}
