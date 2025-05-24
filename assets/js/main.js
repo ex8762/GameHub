@@ -234,8 +234,43 @@ class StorageManager {
         this.initStorage();
         this.retryAttempts = 3;
         this.retryDelay = 1000;
+        this.syncQueue = [];
+        this.isProcessingQueue = false;
+        this.metrics = {
+            operations: {
+                total: 0,
+                successful: 0,
+                failed: 0
+            },
+            timing: {
+                min: Infinity,
+                max: 0,
+                avg: 0,
+                samples: []
+            },
+            storage: {
+                usage: 0,
+                quota: 0,
+                items: 0
+            },
+            errors: {
+                byType: {},
+                recent: []
+            }
+        };
+        this.warningThresholds = {
+            quotaUsage: 0.8,  // 80%
+            errorRate: 0.1,   // 10%
+            responseTime: 1000 // 1秒
+        };
+        
+        // 定期維護和監控
+        this.startPeriodicTasks();
     }
 
+    /**
+     * 初始化儲存系統
+     */
     initStorage() {
         this.storageType = this.checkStorageAvailability();
         if (this.storageType === 'memory') {
@@ -245,12 +280,34 @@ class StorageManager {
                 level: window.ErrorHandler.errorLevels.WARNING
             });
         }
+        this.updateStorageMetrics();
     }
 
+    /**
+     * 檢查存儲可用性
+     */
     checkStorageAvailability() {
         try {
-            localStorage.setItem('test', 'test');
-            localStorage.removeItem('test');
+            const testKey = '__storage_test__';
+            localStorage.setItem(testKey, testKey);
+            localStorage.removeItem(testKey);
+            
+            // 檢查 storage quota
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(({usage, quota}) => {
+                    this.metrics.storage.usage = usage;
+                    this.metrics.storage.quota = quota;
+                    
+                    const usageRatio = usage / quota;
+                    if (usageRatio > this.warningThresholds.quotaUsage) {
+                        window.ErrorHandler.logError({
+                            message: `存儲空間使用率過高: ${(usageRatio * 100).toFixed(2)}%`,
+                            level: window.ErrorHandler.errorLevels.WARNING
+                        });
+                    }
+                });
+            }
+            
             return 'localStorage';
         } catch (e) {
             window.ErrorHandler.logError({
@@ -262,6 +319,123 @@ class StorageManager {
         }
     }
 
+    /**
+     * 開始定期任務
+     */
+    startPeriodicTasks() {
+        // 定期維護
+        setInterval(() => {
+            this.maintenance();
+        }, 30 * 60 * 1000); // 每30分鐘
+
+        // 定期更新指標
+        setInterval(() => {
+            this.updateStorageMetrics();
+            this.checkWarningThresholds();
+        }, 5 * 60 * 1000); // 每5分鐘
+
+        // 定期處理同步佇列
+        setInterval(() => {
+            this.processSyncQueue();
+        }, 60 * 1000); // 每1分鐘
+    }
+
+    /**
+     * 更新存儲指標
+     */
+    updateStorageMetrics() {
+        try {
+            // 計算項目數量
+            this.metrics.storage.items = this.storageType === 'localStorage' ? 
+                Object.keys(localStorage).length :
+                Object.keys(window.memoryStorage).length;
+
+            // 計算使用空間
+            let totalSize = 0;
+            const iterate = this.storageType === 'localStorage' ? localStorage : window.memoryStorage;
+            
+            for (let key in iterate) {
+                if (iterate.hasOwnProperty(key)) {
+                    totalSize += (key.length + iterate[key].length) * 2; // UTF-16
+                }
+            }
+            
+            this.metrics.storage.usage = totalSize;
+        } catch (error) {
+            window.ErrorHandler.logError({
+                message: '更新存儲指標失敗',
+                error: error,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+
+    /**
+     * 檢查警告閾值
+     */
+    checkWarningThresholds() {
+        // 檢查錯誤率
+        const errorRate = this.metrics.operations.failed / this.metrics.operations.total;
+        if (errorRate > this.warningThresholds.errorRate) {
+            window.ErrorHandler.logError({
+                message: `存儲操作錯誤率過高: ${(errorRate * 100).toFixed(2)}%`,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+
+        // 檢查響應時間
+        if (this.metrics.timing.avg > this.warningThresholds.responseTime) {
+            window.ErrorHandler.logError({
+                message: `存儲操作響應時間過長: ${this.metrics.timing.avg.toFixed(2)}ms`,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+
+    /**
+     * 處理同步佇列
+     */
+    async processSyncQueue() {
+        if (this.isProcessingQueue || !navigator.onLine || this.syncQueue.length === 0) {
+            return;
+        }
+
+        this.isProcessingQueue = true;
+        try {
+            while (this.syncQueue.length > 0) {
+                const item = this.syncQueue[0];
+                const { operation, key, value } = item;
+                
+                try {
+                    switch (operation) {
+                        case 'set':
+                            await this._set(key, value);
+                            break;
+                        case 'remove':
+                            await this._remove(key);
+                            break;
+                    }
+                    this.syncQueue.shift(); // 成功後移除
+                } catch (error) {
+                    if (!navigator.onLine) {
+                        break; // 網路斷線時停止處理
+                    }
+                    window.ErrorHandler.logError({
+                        message: '同步操作失敗',
+                        error: error,
+                        level: window.ErrorHandler.errorLevels.WARNING
+                    });
+                    break;
+                }
+            }
+        } finally {
+            this.isProcessingQueue = false;
+        }
+    }
+
+    /**
+     * 安全的獲取操作
+     */
     async get(key, defaultValue = null) {
         return this.retry(async () => {
             try {
@@ -287,6 +461,9 @@ class StorageManager {
         });
     }
 
+    /**
+     * 安全的設置操作
+     */
     async set(key, value) {
         return this.retry(async () => {
             try {
@@ -305,6 +482,9 @@ class StorageManager {
         });
     }
 
+    /**
+     * 安全的刪除操作
+     */
     async remove(key) {
         return this.retry(async () => {
             try {
@@ -320,6 +500,9 @@ class StorageManager {
         });
     }
 
+    /**
+     * 安全的清空操作
+     */
     async clear() {
         return this.retry(async () => {
             try {
@@ -335,6 +518,9 @@ class StorageManager {
         });
     }
 
+    /**
+     * 獲取所有鍵
+     */
     async keys() {
         return this.retry(async () => {
             try {
@@ -349,7 +535,9 @@ class StorageManager {
         });
     }
 
-    // 重試機制
+    /**
+     * 重試機制
+     */
     async retry(operation) {
         let lastError;
         for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
@@ -380,7 +568,9 @@ class StorageManager {
         throw lastError;
     }
 
-    // 切換到內存存儲
+    /**
+     * 切換到內存存儲
+     */
     switchToMemoryStorage() {
         this.storageType = 'memory';
         window.memoryStorage = window.memoryStorage || {};
@@ -390,35 +580,9 @@ class StorageManager {
         });
     }
 
-    // 維護操作
-    async maintenance() {
-        try {
-            // 檢查並清理過期數據
-            const keys = await this.keys();
-            const cleanupTasks = keys.map(async key => {
-                const value = await this.get(key);
-                if (this.isExpired(value)) {
-                    await this.remove(key);
-                }
-            });
-
-            await Promise.all(cleanupTasks);
-
-            // 檢查存儲空間使用情況
-            if (this.storageType === 'localStorage') {
-                this.checkStorageQuota();
-            }
-
-        } catch (error) {
-            window.ErrorHandler.logError({
-                message: '存儲維護失敗',
-                error: error,
-                level: window.ErrorHandler.errorLevels.WARNING
-            });
-        }
-    }
-
-    // 檢查數據是否過期
+    /**
+     * 檢查數據是否過期
+     */
     isExpired(value) {
         if (value && value.expireAt) {
             return new Date(value.expireAt).getTime() < Date.now();
@@ -426,7 +590,9 @@ class StorageManager {
         return false;
     }
 
-    // 檢查存儲配額使用情況
+    /**
+     * 檢查存儲配額使用情況
+     */
     checkStorageQuota() {
         try {
             let totalSize = 0;
@@ -446,6 +612,37 @@ class StorageManager {
         } catch (error) {
             window.ErrorHandler.logError({
                 message: '檢查存儲配額失敗',
+                error: error,
+                level: window.ErrorHandler.errorLevels.WARNING
+            });
+        }
+    }
+
+    /**
+     * 維護操作
+     */
+    async maintenance() {
+        try {
+            // 清理過期數據
+            const keys = await this.keys();
+            const cleanupTasks = keys.map(async key => {
+                const value = await this.get(key);
+                if (this.isExpired(value)) {
+                    await this.remove(key);
+                }
+            });
+
+            await Promise.all(cleanupTasks);
+
+            // 整理存儲空間
+            this.checkStorageQuota();
+            
+            // 刷新指標
+            this.updateStorageMetrics();
+            
+        } catch (error) {
+            window.ErrorHandler.logError({
+                message: '存儲維護失敗',
                 error: error,
                 level: window.ErrorHandler.errorLevels.WARNING
             });

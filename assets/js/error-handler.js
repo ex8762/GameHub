@@ -4,10 +4,26 @@ class ErrorHandler {
         this.maxLogs = 100;
         this.errorLevels = {
             DEBUG: 0,
-            INFO: 1,
+            INFO: 1, 
             WARNING: 2,
             ERROR: 3,
             CRITICAL: 4
+        };
+        this.memoryWarningThreshold = 0.9; // 90% 記憶體使用率警告
+        this.performanceMetrics = {
+            errors: {
+                count: 0,
+                byType: {},
+                byLevel: {}
+            },
+            memory: {
+                usage: [],
+                warnings: 0
+            },
+            timing: {
+                avg: 0,
+                samples: []
+            }
         };
     }
 
@@ -43,6 +59,7 @@ class ErrorHandler {
                 message: '網路已恢復連接',
                 level: this.errorLevels.INFO
             });
+            this.syncPendingErrors();
         });
 
         window.addEventListener('offline', () => {
@@ -51,41 +68,87 @@ class ErrorHandler {
                 level: this.errorLevels.WARNING
             });
         });
+        
+        // 定期檢查記憶體使用情況
+        this.startMemoryMonitoring();
+        
+        // 定期同步錯誤日誌
+        this.startErrorSync();
+    }
+
+    /**
+     * 開始記憶體監控
+     */
+    startMemoryMonitoring() {
+        setInterval(() => {
+            if (window.performance && window.performance.memory) {
+                const memoryInfo = window.performance.memory;
+                const usageRatio = memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit;
+                
+                this.performanceMetrics.memory.usage.push({
+                    timestamp: Date.now(),
+                    value: usageRatio
+                });
+                
+                // 保留最近100筆記錄
+                if (this.performanceMetrics.memory.usage.length > 100) {
+                    this.performanceMetrics.memory.usage.shift();
+                }
+                
+                // 檢查是否超過警告閾值
+                if (usageRatio > this.memoryWarningThreshold) {
+                    this.performanceMetrics.memory.warnings++;
+                    this.logError({
+                        message: `記憶體使用率過高: ${(usageRatio * 100).toFixed(2)}%`,
+                        level: this.errorLevels.WARNING
+                    });
+                }
+            }
+        }, 60000); // 每分鐘檢查一次
+    }
+
+    /**
+     * 開始錯誤同步
+     */
+    startErrorSync() {
+        setInterval(() => {
+            if (navigator.onLine) {
+                this.syncPendingErrors();
+            }
+        }, 300000); // 每5分鐘同步一次
     }
 
     /**
      * 記錄錯誤
-     * @param {Object} options 錯誤選項
-     * @param {string} options.message 錯誤訊息
-     * @param {Error} [options.error] 錯誤對象
-     * @param {number} [options.level] 錯誤級別
-     * @param {string} [options.source] 錯誤來源
      */
-    logError({ message, error = null, level = this.errorLevels.ERROR, source = '' }) {
+    logError(errorLog) {
+        // 增加時間戳記
         const timestamp = new Date().toISOString();
-        const errorLog = {
-            timestamp,
-            message,
-            level,
-            source: source || 'unknown',
-            stack: error?.stack,
-            userAgent: navigator.userAgent,
-            url: window.location.href
-        };
+        const enrichedLog = { ...errorLog, timestamp };
 
-        // 保存錯誤日誌
-        this.saveLog(errorLog);
+        // 更新錯誤統計
+        this.performanceMetrics.errors.count++;
+        this.performanceMetrics.errors.byLevel[errorLog.level] = 
+            (this.performanceMetrics.errors.byLevel[errorLog.level] || 0) + 1;
 
-        // 根據錯誤級別顯示通知
-        this.showErrorNotification(errorLog);
-
-        // 如果是嚴重錯誤，同時發送到後端
-        if (level >= this.errorLevels.ERROR) {
-            this.sendErrorToServer(errorLog);
+        if (errorLog.error) {
+            const errorType = errorLog.error.name || 'Unknown';
+            this.performanceMetrics.errors.byType[errorType] = 
+                (this.performanceMetrics.errors.byType[errorType] || 0) + 1;
         }
 
-        // 在控制台輸出詳細信息
-        console.error('[ErrorHandler]', errorLog);
+        // 顯示錯誤通知
+        this.showErrorNotification(enrichedLog);
+
+        // 存儲錯誤日誌
+        this.storeError(enrichedLog);
+
+        // 嚴重錯誤立即同步
+        if (errorLog.level >= this.errorLevels.ERROR && navigator.onLine) {
+            this.sendErrorToServer(enrichedLog);
+        } else {
+            this.queueErrorForSync(enrichedLog);
+        }
     }
 
     /**
@@ -231,8 +294,3 @@ class ErrorHandler {
 // 創建全局錯誤處理器實例
 window.ErrorHandler = new ErrorHandler();
 window.ErrorHandler.init();
-
-// 定期同步錯誤日誌
-setInterval(() => {
-    window.ErrorHandler.syncPendingErrors();
-}, 5 * 60 * 1000); // 每5分鐘同步一次

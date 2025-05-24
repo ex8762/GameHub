@@ -372,6 +372,38 @@
             color: var(--primary-color);
         }
         
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+        
+        #performance-chart {
+            margin-top: 1rem;
+            height: 200px;
+            width: 100%;
+        }
+        
+        #memory-metrics,
+        #storage-metrics,
+        #performance-metrics,
+        #error-metrics {
+            background: var(--light-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+        }
+        
         @media (max-width: 768px) {
             .game-stats-grid {
                 grid-template-columns: 1fr;
@@ -464,8 +496,7 @@
                 </div>
             </section>
 
-            <!-- 系統資訊面板 -->
-            <section id="system" class="tab-content">
+            <!-- 系統資訊面板 -->            <section id="system" class="tab-content">
                 <div class="system-info">
                     <div class="info-card">
                         <h3>系統狀態</h3>
@@ -475,6 +506,63 @@
                             <li>Service Worker: <span id="sw-status">檢查中...</span></li>
                             <li>網路連接: <span id="network-status">檢查中...</span></li>
                         </ul>
+                    </div>
+                    <div class="info-card">
+                        <h3>記憶體使用</h3>
+                        <div id="memory-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">已使用:</span>
+                                <span id="memory-usage">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">總容量:</span>
+                                <span id="memory-total">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">使用率:</span>
+                                <span id="memory-utilization">檢查中...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>存儲空間</h3>
+                        <div id="storage-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">已使用:</span>
+                                <span id="storage-usage">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">總容量:</span>
+                                <span id="storage-total">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">使用率:</span>
+                                <span id="storage-utilization">檢查中...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>效能指標</h3>
+                        <div id="performance-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">平均回應時間:</span>
+                                <span id="avg-response-time">檢查中...</span>
+                            </div>
+                            <canvas id="performance-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>錯誤統計</h3>
+                        <div id="error-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">總錯誤數:</span>
+                                <span id="total-errors">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">錯誤率:</span>
+                                <span id="error-rate">檢查中...</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-card">
                         <h3>錯誤日誌</h3>

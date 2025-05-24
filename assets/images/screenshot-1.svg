@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" version="1.1" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1280" height="720" fill="#f5f5f5"/>
+    <g transform="translate(0, 60)">
+        <!-- 遊戲區塊 -->
+        <rect x="240" y="100" width="800" height="500" fill="#fff" rx="8"/>
+        <text x="640" y="60" font-family="Arial" font-size="32" text-anchor="middle" fill="#333">遊戲天地首頁</text>
+        
+        <!-- 遊戲卡片 -->
+        <g transform="translate(280, 140)">
+            <rect width="220" height="180" fill="#4CAF50" rx="4"/>
+            <text x="110" y="100" font-family="Arial" font-size="18" text-anchor="middle" fill="#fff">射擊遊戲</text>
+        </g>
+        
+        <g transform="translate(530, 140)">
+            <rect width="220" height="180" fill="#2196F3" rx="4"/>
+            <text x="110" y="100" font-family="Arial" font-size="18" text-anchor="middle" fill="#fff">模擬經營</text>
+        </g>
+        
+        <g transform="translate(780, 140)">
+            <rect width="220" height="180" fill="#FF9800" rx="4"/>
+            <text x="110" y="100" font-family="Arial" font-size="18" text-anchor="middle" fill="#fff">咖啡廳</text>
+        </g>
+    </g>
+</svg>

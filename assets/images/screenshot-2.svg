@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="720" version="1.1" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1280" height="720" fill="#1a1a1a"/>
+    <g transform="translate(0, 60)">
+        <!-- 遊戲視窗 -->
+        <rect x="240" y="100" width="800" height="500" fill="#333" rx="8"/>
+        <text x="640" y="60" font-family="Arial" font-size="32" text-anchor="middle" fill="#fff">射擊遊戲</text>
+        
+        <!-- 遊戲元素 -->
+        <g transform="translate(280, 140)">
+            <!-- 玩家飛機 -->
+            <path d="M360 400 L380 440 L400 400 L380 380 Z" fill="#4CAF50"/>
+            
+            <!-- 子彈 -->
+            <rect x="378" y="340" width="4" height="20" fill="#fff"/>
+            <rect x="378" y="300" width="4" height="20" fill="#fff"/>
+            
+            <!-- 敵人 -->
+            <rect x="340" y="200" width="30" height="30" fill="#f44336"/>
+            <rect x="400" y="150" width="30" height="30" fill="#f44336"/>
+            <rect x="460" y="180" width="30" height="30" fill="#f44336"/>
+        </g>
+        
+        <!-- 分數 -->
+        <text x="280" y="160" font-family="Arial" font-size="24" fill="#fff">分數: 1234</text>
+        
+        <!-- 生命值 -->
+        <g transform="translate(880, 160)">
+            <text x="0" y="0" font-family="Arial" font-size="24" fill="#fff">生命值:</text>
+            <rect x="100" y="-20" width="20" height="20" fill="#4CAF50"/>
+            <rect x="130" y="-20" width="20" height="20" fill="#4CAF50"/>
+            <rect x="160" y="-20" width="20" height="20" fill="#4CAF50"/>
+        </g>
+    </g>
+</svg>

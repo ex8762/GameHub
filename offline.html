@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>離線中 - 遊戲天地</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --error-color: #f44336;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --card-bg: #fff;
+            --shadow-color: rgba(0,0,0,0.1);
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #81c784;
+            --error-color: #ef5350;
+            --text-color: #fff;
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --shadow-color: rgba(0,0,0,0.3);
+            --border-color: #404040;
+        }
+
+        body {
+            font-family: '微軟正黑體', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .offline-container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        h1 {
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        p {
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .retry-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--error-color);
+        }
+
+        .status-section {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: var(--bg-color);
+            border-radius: 4px;
+        }
+
+        .status-item i {
+            margin-right: 0.5rem;
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .status-ok {
+            color: var(--primary-color);
+        }
+
+        .status-error {
+            color: var(--error-color);
+        }
+
+        .theme-switch {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .theme-switch:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-switch i {
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .offline-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch" id="themeSwitch">
+        <i class="fas fa-moon"></i>
+    </div>
+    
+    <div class="offline-container">
+        <div class="offline-icon">
+            <i class="fas fa-wifi-slash"></i>
+        </div>
+        
+        <h1>您目前處於離線狀態</h1>
+        
+        <p>看起來您的網路連接已經中斷。別擔心，已快取的遊戲和功能仍然可以使用。</p>
+        
+        <div class="status-section">
+            <div class="status-item">
+                <span><i class="fas fa-server"></i> 伺服器連接</span>
+                <span class="status-value status-error">離線</span>
+            </div>
+            
+            <div class="status-item">
+                <span><i class="fas fa-database"></i> 本地資料</span>
+                <span class="status-value status-ok" id="localDataStatus">可用</span>
+            </div>
+            
+            <div class="status-item">
+                <span><i class="fas fa-save"></i> 遊戲進度</span>
+                <span class="status-value status-ok" id="gameProgressStatus">已保存</span>
+            </div>
+        </div>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            <i class="fas fa-sync-alt"></i> 重新連接
+        </button>
+    </div>
+    
+    <script>
+        // 主題切換功能
+        const themeSwitch = document.getElementById('themeSwitch');
+        const themeIcon = themeSwitch.querySelector('i');
+        
+        // 從本地儲存讀取主題設定
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+        
+        themeSwitch.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            themeIcon.classList.replace(
+                newTheme === 'dark' ? 'fa-moon' : 'fa-sun',
+                newTheme === 'dark' ? 'fa-sun' : 'fa-moon'
+            );
+            
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        // 檢查本地資料狀態
+        function checkLocalData() {
+            const localDataStatus = document.getElementById('localDataStatus');
+            try {
+                const testKey = '__storage_test__';
+                localStorage.setItem(testKey, testKey);
+                localStorage.removeItem(testKey);
+                localDataStatus.textContent = '可用';
+                localDataStatus.className = 'status-value status-ok';
+            } catch (e) {
+                localDataStatus.textContent = '不可用';
+                localDataStatus.className = 'status-value status-error';
+            }
+        }
+        
+        // 檢查遊戲進度
+        function checkGameProgress() {
+            const gameProgressStatus = document.getElementById('gameProgressStatus');
+            const hasProgress = localStorage.getItem('game_progress');
+            
+            if (hasProgress) {
+                gameProgressStatus.textContent = '已保存';
+                gameProgressStatus.className = 'status-value status-ok';
+            } else {
+                gameProgressStatus.textContent = '無進度';
+                gameProgressStatus.className = 'status-value status-error';
+            }
+        }
+        
+        // 重試連接
+        function retryConnection() {
+            const button = document.querySelector('.retry-button');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在重新連接...';
+            
+            // 檢查網路狀態
+            if (navigator.onLine) {
+                window.location.reload();
+            } else {
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-sync-alt"></i> 重新連接';
+                    alert('網路仍然無法連接，請檢查您的網路設定。');
+                }, 2000);
+            }
+        }
+        
+        // 監聽網路狀態
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+        
+        // 定期檢查網路狀態
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }, 5000);
+        
+        // 初始檢查
+        checkLocalData();
+        checkGameProgress();
+    </script>
+</body>
+</html>

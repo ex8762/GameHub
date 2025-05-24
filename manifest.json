@@ -1,8 +1,9 @@
 {
     "name": "遊戲天地",
     "short_name": "遊戲天地",
-    "description": "精選網頁遊戲平台",
-    "start_url": "/",
+    "description": "精選網頁遊戲平台 - 享受離線遊戲體驗",
+    "start_url": "/?source=pwa",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#4CAF50",
@@ -10,17 +11,80 @@
         {
             "src": "assets/images/icon-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "assets/images/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "assets/images/icon-monochrome.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "monochrome"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "assets/images/screenshot-1.jpg",
+            "sizes": "1280x720",
+            "type": "image/jpeg",
+            "platform": "wide",
+            "label": "遊戲天地首頁"
+        },
+        {
+            "src": "assets/images/screenshot-2.jpg",
+            "sizes": "1280x720",
+            "type": "image/jpeg",
+            "platform": "wide",
+            "label": "射擊遊戲畫面"
         }
     ],
     "categories": ["games", "entertainment"],
     "orientation": "any",
     "lang": "zh-TW",
     "dir": "ltr",
-    "prefer_related_applications": false
-} 
+    "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "射擊遊戲",
+            "url": "/games/game-1/index.html",
+            "description": "開始射擊遊戲"
+        },
+        {
+            "name": "模擬經營",
+            "url": "/games/game-2/index.html",
+            "description": "開始模擬經營遊戲"
+        },
+        {
+            "name": "咖啡廳",
+            "url": "/games/game-3/index.html",
+            "description": "開始咖啡廳經營遊戲"
+        }
+    ],
+    "related_applications": [],
+    "protocol_handlers": [
+        {
+            "protocol": "web+game",
+            "url": "/?game=%s"
+        }
+    ],
+    "share_target": {
+        "action": "/share-target/",
+        "method": "GET",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    },
+    "features": [
+        "離線遊戲支援",
+        "遊戲進度自動保存",
+        "跨裝置同步",
+        "系統通知"
+    ]
+}
