@@ -1,141 +1,98 @@
 // 進階存儲空間管理器
-class StorageSpaceManager {
-    constructor() {
-        this.quotaThreshold = 0.8; // 80% 空間使用警告閾值
-        this.cleanupThreshold = 0.9; // 90% 空間使用自動清理閾值
-        this.metrics = {
-            usage: 0,
-            quota: 0,
-            items: 0,
-            lastCheck: null
-        };
-    }
+const StorageManager = {
+    quotaThreshold: 0.8, // 80% 空間使用警告閾值
+    cleanupThreshold: 0.9, // 90% 空間使用自動清理閾值
+    metrics: {
+        usage: 0,
+        quota: 0,
+        items: 0,
+        lastCheck: null
+    },
 
-    /**
-     * 初始化存儲空間管理器
-     */
     async init() {
-        await this.updateMetrics();
-        this.startPeriodicCheck();
-    }
-
-    /**
-     * 更新存儲指標
-     */
-    async updateMetrics() {
         try {
-            // 檢查配額
+            await this.updateStorageMetrics();
+            this.startPeriodicCheck();
+            return true;
+        } catch (error) {
+            console.error('初始化存儲管理器失敗:', error);
+            if (window.ErrorHandler) {
+                ErrorHandler.handleError(error);
+            }
+            return false;
+        }
+    },
+
+    async updateStorageMetrics() {
+        try {
             if (navigator.storage && navigator.storage.estimate) {
                 const {usage, quota} = await navigator.storage.estimate();
                 this.metrics.usage = usage;
                 this.metrics.quota = quota;
-            }
-
-            // 計算 localStorage 使用情況
-            let localStorageSize = 0;
-            let itemCount = 0;
-            
-            for (let key in localStorage) {
-                if (localStorage.hasOwnProperty(key)) {
-                    const itemSize = (key.length + localStorage[key].length) * 2; // UTF-16
-                    localStorageSize += itemSize;
-                    itemCount++;
+                this.metrics.lastCheck = Date.now();
+                
+                if (this.checkQuotaWarning()) {
+                    this.showStorageWarning();
+                }
+                
+                if (this.checkQuotaCritical()) {
+                    await this.cleanup();
                 }
             }
-
-            this.metrics.items = itemCount;
-            this.metrics.lastCheck = new Date();
-
-            // 檢查警告閾值
-            this.checkWarningThresholds();
-
         } catch (error) {
             console.error('更新存儲指標失敗:', error);
+            throw error;
         }
-    }
+    },
 
-    /**
-     * 檢查警告閾值
-     */
-    checkWarningThresholds() {
-        const usageRatio = this.metrics.usage / this.metrics.quota;
+    checkQuotaWarning() {
+        return this.metrics.usage > (this.metrics.quota * this.quotaThreshold);
+    },
 
-        if (usageRatio > this.cleanupThreshold) {
-            // 超過清理閾值，執行自動清理
-            this.autoCleanup();
-        } else if (usageRatio > this.quotaThreshold) {
-            // 超過警告閾值，發出警告
-            window.NotificationSystem.show(
-                `存儲空間使用率已達 ${(usageRatio * 100).toFixed(1)}%`,
-                'warning',
-                { duration: 10000 }
+    checkQuotaCritical() {
+        return this.metrics.usage > (this.metrics.quota * this.cleanupThreshold);
+    },
+
+    showStorageWarning() {
+        if (window.showNotification) {
+            showNotification(
+                '存儲空間警告',
+                '存儲空間使用率已超過 ' + (this.quotaThreshold * 100) + '%，請考慮清理一些數據。'
             );
         }
-    }
+    },
 
-    /**
-     * 自動清理存儲空間
-     */
-    async autoCleanup() {
+    async cleanup() {
         try {
-            // 1. 清理過期數據
-            await this.cleanExpiredData();
-
-            // 2. 清理舊的錯誤日誌
-            await this.cleanOldErrorLogs();
-
-            // 3. 清理舊的遊戲快取
-            await this.cleanOldGameCache();
-
-            // 4. 清理不必要的統計數據
-            await this.cleanOldStats();
-
-            // 更新指標
-            await this.updateMetrics();
-
-            window.NotificationSystem.show(
-                '已完成存儲空間自動清理',
-                'success',
-                { duration: 5000 }
-            );
+            await Promise.all([
+                this.cleanupExpiredData(),
+                this.cleanupOldErrorLogs(),
+                this.cleanupOldGameCache(),
+                this.cleanupOldStats()
+            ]);
+            await this.updateStorageMetrics();
         } catch (error) {
-            console.error('自動清理失敗:', error);
+            console.error('清理存儲空間失敗:', error);
+            throw error;
         }
-    }
+    },
 
-    /**
-     * 清理過期數據
-     */
-    async cleanExpiredData() {
+    async cleanupExpiredData() {
+        const maxAge = this.getMaxDataAge();
         const now = Date.now();
-        const expiryCheck = {
-            'maintenance_logs': 7 * 24 * 60 * 60 * 1000, // 7天
-            'error_logs': 3 * 24 * 60 * 60 * 1000,      // 3天
-            'game_stats': 30 * 24 * 60 * 60 * 1000      // 30天
-        };
 
-        for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key)) {
-                try {
-                    const value = JSON.parse(localStorage[key]);
-                    if (value && value.timestamp) {
-                        const age = now - new Date(value.timestamp).getTime();
-                        const maxAge = this.getMaxAge(key, expiryCheck);
-                        if (maxAge && age > maxAge) {
-                            localStorage.removeItem(key);
-                        }
-                    }
-                } catch (e) {
-                    // 忽略非 JSON 數據
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            try {
+                const item = JSON.parse(localStorage.getItem(key));
+                if (item && item.timestamp && (now - item.timestamp > maxAge)) {
+                    localStorage.removeItem(key);
                 }
-            }
+            } catch (e) { /* 忽略無法解析的項目 */ }
         }
-    }
+    },
 
-    /**
-     * 清理舊的錯誤日誌
-     */
-    async cleanOldErrorLogs() {
+    async cleanupOldErrorLogs() {
         const maxLogs = 100; // 保留最新的100條錯誤日誌
         try {
             const errorLogs = JSON.parse(localStorage.getItem('error_logs') || '[]');
@@ -143,94 +100,76 @@ class StorageSpaceManager {
                 errorLogs.splice(maxLogs);
                 localStorage.setItem('error_logs', JSON.stringify(errorLogs));
             }
-        } catch (error) {
-            console.error('清理錯誤日誌失敗:', error);
-        }
-    }
+        } catch (e) { /* 忽略錯誤 */ }
+    },
 
-    /**
-     * 清理舊的遊戲快取
-     */
-    async cleanOldGameCache() {
+    async cleanupOldGameCache() {
         if ('caches' in window) {
             try {
                 const keys = await caches.keys();
-                const deletePromises = keys
-                    .filter(key => key.startsWith('game-cache-') && key !== 'game-cache-v1')
-                    .map(key => caches.delete(key));
-                await Promise.all(deletePromises);
-            } catch (error) {
-                console.error('清理遊戲快取失敗:', error);
-            }
+                const oldCaches = keys.filter(key => 
+                    key.startsWith('game-cache-') && 
+                    key !== 'game-cache-v1'
+                );
+                await Promise.all(oldCaches.map(key => caches.delete(key)));
+            } catch (e) { /* 忽略錯誤 */ }
         }
-    }
+    },
 
-    /**
-     * 清理舊的統計數據
-     */
-    async cleanOldStats() {
+    async cleanupOldStats() {
+        const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 天
         try {
             const stats = JSON.parse(localStorage.getItem('game_stats') || '{}');
             const now = Date.now();
-            const maxAge = 30 * 24 * 60 * 60 * 1000; // 30天
+            let changed = false;
 
-            // 清理舊的統計數據
             Object.keys(stats).forEach(key => {
-                const timestamp = new Date(stats[key].timestamp).getTime();
-                if (now - timestamp > maxAge) {
+                if (now - stats[key].timestamp > maxAge) {
                     delete stats[key];
+                    changed = true;
                 }
             });
 
-            localStorage.setItem('game_stats', JSON.stringify(stats));
-        } catch (error) {
-            console.error('清理統計數據失敗:', error);
-        }
-    }
-
-    /**
-     * 獲取數據最大保存時間
-     */
-    getMaxAge(key, expiryCheck) {
-        for (let pattern in expiryCheck) {
-            if (key.includes(pattern)) {
-                return expiryCheck[pattern];
+            if (changed) {
+                localStorage.setItem('game_stats', JSON.stringify(stats));
             }
-        }
-        return null;
-    }
+        } catch (e) { /* 忽略錯誤 */ }
+    },
 
-    /**
-     * 開始定期檢查
-     */
+    getMaxDataAge() {
+        const usageRatio = this.metrics.usage / this.metrics.quota;
+        const baseAge = 30 * 24 * 60 * 60 * 1000; // 30 天
+        return Math.max(baseAge * (1 - usageRatio), 7 * 24 * 60 * 60 * 1000); // 最少 7 天
+    },
+
     startPeriodicCheck() {
         setInterval(() => {
-            this.updateMetrics();
-        }, 15 * 60 * 1000); // 每15分鐘檢查一次
-    }
+            this.updateStorageMetrics().catch(error => {
+                console.error('定期檢查失敗:', error);
+                if (window.ErrorHandler) {
+                    ErrorHandler.handleError(error);
+                }
+            });
+        }, 15 * 60 * 1000); // 每 15 分鐘檢查一次
+    },
 
-    /**
-     * 獲取存儲空間報告
-     */
-    getStorageReport() {
+    async getStorageReport() {
+        await this.updateStorageMetrics();
         return {
-            usage: this.metrics.usage,
-            quota: this.metrics.quota,
-            items: this.metrics.items,
-            usageRatio: (this.metrics.usage / this.metrics.quota) * 100,
-            lastCheck: this.metrics.lastCheck
+            ...this.metrics,
+            usagePercent: (this.metrics.usage / this.metrics.quota * 100).toFixed(2),
+            warning: this.checkQuotaWarning(),
+            critical: this.checkQuotaCritical()
         };
     }
-}
+};
 
-// 創建全局實例
-window.StorageSpaceManager = new StorageSpaceManager();
-
-// 當文檔載入完成時初始化
-// 只初始化一次
-if (!window._storageSpaceManagerInitialized) {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.StorageSpaceManager.init();
+// 確保在頁面加載時初始化
+document.addEventListener('DOMContentLoaded', () => {
+    StorageManager.init().catch(error => {
+        console.error('StorageManager 初始化失敗:', error);
+        if (window.ErrorHandler) {
+            ErrorHandler.handleError(error);
+        }
     });
-    window._storageSpaceManagerInitialized = true;
-}
+});

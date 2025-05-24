@@ -2,6 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     try {
+        // 初始化錯誤處理
+        ErrorHandler.init();
+        
         checkAndInitializeFeatures();
         initializeMobileMenu();
         initializeImagePreview();
