@@ -1,5 +1,5 @@
 // 改進的通知系統
-const NotificationSystem = {
+window.NotificationSystem = window.NotificationSystem || {
     types: {
         INFO: 'info',
         SUCCESS: 'success',

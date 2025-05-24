@@ -1,18 +1,18 @@
 // 統一的錯誤處理系統
 class ErrorHandler {    constructor() {
         this.maxLogs = 1000; // 提高最大日志数量
-        this.maxLogAge = {
-            [this.errorLevels.ERROR]: 7 * 24 * 60 * 60 * 1000,    // 严重错误保留7天
-            [this.errorLevels.WARNING]: 3 * 24 * 60 * 60 * 1000,  // 警告保留3天
-            [this.errorLevels.INFO]: 24 * 60 * 60 * 1000,         // 信息保留1天
-            [this.errorLevels.DEBUG]: 12 * 60 * 60 * 1000         // 调试信息保留12小时
-        };
         this.errorLevels = {
             DEBUG: 0,
             INFO: 1, 
             WARNING: 2,
             ERROR: 3,
             CRITICAL: 4
+        };
+        this.maxLogAge = {
+            [this.errorLevels.ERROR]: 7 * 24 * 60 * 60 * 1000,    // 严重错误保留7天
+            [this.errorLevels.WARNING]: 3 * 24 * 60 * 60 * 1000,  // 警告保留3天
+            [this.errorLevels.INFO]: 24 * 60 * 60 * 1000,         // 信息保留1天
+            [this.errorLevels.DEBUG]: 12 * 60 * 60 * 1000         // 调试信息保留12小时
         };
         this.memoryWarningThreshold = 0.9; // 90% 记忆体使用率警告
         this.storageWarningThreshold = 0.8; // 80% 存储空间使用警告

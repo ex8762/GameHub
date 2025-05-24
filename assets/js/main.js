@@ -19,24 +19,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 改進的通知系統
-const NotificationSystem = {
-        types: {
-            INFO: 'info',
-            SUCCESS: 'success',
-            WARNING: 'warning',
-            ERROR: 'error'
-        },
-
-        sounds: {
-            info: null,
-            success: 'success-sound',
-            warning: 'warning-sound',
-            error: 'error-sound'
-        },
-
-        queue: [],
-        isProcessing: false,
+// 主要的功能初始化
+function initializeMainFeatures() {
+    checkAndInitializeFeatures();
+    initializeMobileMenu();
+    initializeImagePreview();
+    initializeRatingSystem();
+    initializeCommentSystem();
+    initializeSearchSystem();
+    initializeLoadingProgress();
+    initializeRecommendationSystem();
+    initializeFavoriteSystem();
+    initializeShareSystem();
+    initializeAnalytics();
+}
 
         init() {
             // 確保容器存在
@@ -1062,7 +1058,9 @@ async function initializeLoadingProgress() {
             // 檢查遊戲可用性
             updateLoadingProgress(loadingUI, '檢查遊戲狀態', 10);
             const response = await fetch(gameUrl, { method: 'HEAD' });
-            if (!response.ok) throw new Error('遊戲暫時無法訪問');
+            if (!response.ok) {
+                throw new Error('遊戲目前無法訪問');
+            }
             if (isCancelled) return;
 
             // 預載入資源
@@ -1073,39 +1071,30 @@ async function initializeLoadingProgress() {
             // 載入必要資源
             updateLoadingProgress(loadingUI, '載入遊戲資源', 50, '開始載入遊戲資源');
             for (let i = 0; i < preloadedResources.length; i++) {
-                if (isCancelled) return;
                 const resource = preloadedResources[i];
-                const progress = 50 + (i + 1) * (30 / preloadedResources.length);
                 updateLoadingProgress(
                     loadingUI, 
                     '載入遊戲資源', 
-                    progress,
-                    `已載入: ${resource.value.type}`
+                    50 + ((i + 1) / preloadedResources.length) * 40,
+                    `已載入 ${resource.type}`
                 );
-                await new Promise(resolve => setTimeout(resolve, 500));
+                if (isCancelled) return;
             }
 
-            // 準備遊戲環境
-            if (isCancelled) return;
-            updateLoadingProgress(loadingUI, '準備遊戲環境', 90, '配置遊戲設置');
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             // 完成載入
-            if (isCancelled) return;
-            updateLoadingProgress(loadingUI, '載入完成', 100, '遊戲準備就緒！');
-            NotificationSystem.show('遊戲載入完成', 'success');
-
-            // 延遲跳轉以顯示完成狀態
+            updateLoadingProgress(loadingUI, '完成載入', 100, '遊戲載入完成');
             setTimeout(() => {
                 if (!isCancelled) {
+                    loadingUI.remove();
                     window.location.href = gameUrl;
                 }
-            }, 1000);
+            }, 500);
 
         } catch (error) {
-            console.error('遊戲載入錯誤:', error);
-            NotificationSystem.show(error.message, 'error');
-            loadingUI.remove();
+            if (!isCancelled) {
+                NotificationSystem.show(error.message || '載入遊戲時發生錯誤', 'error');
+                loadingUI.remove();
+            }
         }
     }
 
@@ -1134,8 +1123,7 @@ function initializeRecommendationSystem() {
         
         Object.entries(ratings).forEach(([gameId, data]) => {
             if (data.score > 0) {
-                const categories = gameCategories[gameId] || [];
-                categories.forEach(category => {
+                gameCategories[gameId].forEach(category => {
                     preferences[category] = (preferences[category] || 0) + data.score;
                 });
             }
@@ -1146,28 +1134,29 @@ function initializeRecommendationSystem() {
     
     function updateRecommendations() {
         const preferences = getGamePreferences();
-        const games = document.querySelectorAll('.game-section');
-        
-        games.forEach(game => {
-            const gameId = game.id;
-            const categories = gameCategories[gameId] || [];
-            let relevanceScore = 0;
-            
-            categories.forEach(category => {
-                relevanceScore += preferences[category] || 0;
-            });
-            
-            if (relevanceScore > 0) {
-                const recommendationBadge = document.createElement('div');
-                recommendationBadge.className = 'recommendation-badge';
-                recommendationBadge.innerHTML = '<i class="fas fa-thumbs-up"></i> 推薦遊戲';
-                
-                const existingBadge = game.querySelector('.recommendation-badge');
-                if (!existingBadge) {
-                    game.querySelector('.game-info').appendChild(recommendationBadge);
-                }
-            }
+        const recommendationContainer = document.querySelector('.game-recommendations');
+        if (!recommendationContainer) return;
+
+        // 根據用戶偏好計算遊戲推薦分數
+        const gameScores = Object.entries(gameCategories).map(([gameId, categories]) => {
+            const score = categories.reduce((sum, category) => 
+                sum + (preferences[category] || 0), 0);
+            return { gameId, score };
         });
+
+        // 排序並顯示推薦
+        const recommendations = gameScores
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+
+        recommendationContainer.innerHTML = recommendations.length > 0 
+            ? recommendations.map(({gameId}) => `
+                <div class="recommendation-item">
+                    <h4>${document.querySelector(`#${gameId} h2`)?.textContent || gameId}</h4>
+                    <a href="#${gameId}" class="btn">查看遊戲</a>
+                </div>
+            `).join('')
+            : '<p>玩更多遊戲來獲取個人化推薦！</p>';
     }
     
     // 監聽評分變化
@@ -1186,215 +1175,165 @@ function initializeFavoriteSystem() {
     const favorites = JSON.parse(localStorage.getItem('gameFavorites')) || [];
     
     function addFavoriteButton(gameSection) {
-        const gameInfo = gameSection.querySelector('.game-info');
         const gameId = gameSection.id;
-        const isFavorite = favorites.includes(gameId);
+        const existingButton = gameSection.querySelector('.favorite-btn');
+        if (existingButton) return;  // 如果按鈕已存在，直接返回
+
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.className = `favorite-btn ${favorites.includes(gameId) ? 'active' : ''}`;
+        favoriteBtn.innerHTML = `<i class="fas fa-heart"></i>`;
+        favoriteBtn.title = favorites.includes(gameId) ? '取消收藏' : '加入收藏';
         
-        const favoriteButton = document.createElement('button');
-        favoriteButton.className = `favorite-button ${isFavorite ? 'active' : ''}`;
-        favoriteButton.innerHTML = `
-            <i class="fas ${isFavorite ? 'fa-heart' : 'fa-heart-o'}"></i>
-            ${isFavorite ? '已收藏' : '收藏遊戲'}
-        `;
-        
-        favoriteButton.addEventListener('click', () => {
-            const index = favorites.indexOf(gameId);
-            if (index === -1) {
-                favorites.push(gameId);
-                favoriteButton.classList.add('active');
-                favoriteButton.innerHTML = '<i class="fas fa-heart"></i> 已收藏';
-                NotificationSystem.show('遊戲已加入收藏！');
-            } else {
+        favoriteBtn.addEventListener('click', () => {
+            const isFavorite = favorites.includes(gameId);
+            if (isFavorite) {
+                const index = favorites.indexOf(gameId);
                 favorites.splice(index, 1);
-                favoriteButton.classList.remove('active');
-                favoriteButton.innerHTML = '<i class="fas fa-heart-o"></i> 收藏遊戲';
-                NotificationSystem.show('遊戲已取消收藏');
+                favoriteBtn.classList.remove('active');
+                favoriteBtn.title = '加入收藏';
+                NotificationSystem.show('已從收藏移除', 'info');
+            } else {
+                favorites.push(gameId);
+                favoriteBtn.classList.add('active');
+                favoriteBtn.title = '取消收藏';
+                NotificationSystem.show('已加入收藏', 'success');
             }
+            
             localStorage.setItem('gameFavorites', JSON.stringify(favorites));
             updateFavoritesList();
         });
         
-        gameInfo.insertBefore(favoriteButton, gameInfo.querySelector('.play-button'));
-    }
-    
-    function updateFavoritesList() {
-        const favoritesList = document.getElementById('favoritesList');
-        if (!favoritesList) {
-            createFavoritesList();
-            return;
+        const controlsContainer = gameSection.querySelector('.game-controls');
+        if (controlsContainer) {
+            controlsContainer.appendChild(favoriteBtn);
         }
-        
-        favoritesList.innerHTML = '';
+    }
+
+    function updateFavoritesList() {
+        const favoritesList = document.querySelector('.favorites-list');
+        if (!favoritesList) return;
+
         if (favorites.length === 0) {
             favoritesList.innerHTML = '<p class="no-favorites">還沒有收藏的遊戲</p>';
             return;
         }
-        
-        favorites.forEach(gameId => {
+
+        const favoritesHTML = favorites.map(gameId => {
             const gameSection = document.getElementById(gameId);
-            if (gameSection) {
-                const gameTitle = gameSection.querySelector('h2').textContent;
-                const gameItem = document.createElement('div');
-                gameItem.className = 'favorite-item';
-                gameItem.innerHTML = `
-                    <span>${gameTitle}</span>
-                    <button class="remove-favorite" data-game="${gameId}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                favoritesList.appendChild(gameItem);
-            }
-        });
-        
-        document.querySelectorAll('.remove-favorite').forEach(button => {
+            if (!gameSection) return '';
+            
+            const gameTitle = gameSection.querySelector('h2')?.textContent || gameId;
+            const gameImage = gameSection.querySelector('.game-thumbnail img')?.src;
+            
+            return `
+                <div class="favorite-item" data-game-id="${gameId}">
+                    <div class="favorite-content">
+                        ${gameImage ? `<img src="${gameImage}" alt="${gameTitle}" class="favorite-thumbnail">` : ''}
+                        <div class="favorite-info">
+                            <h4>${gameTitle}</h4>
+                            <div class="favorite-actions">
+                                <a href="#${gameId}" class="btn btn-primary">前往遊戲</a>
+                                <button class="btn btn-danger remove-favorite" title="移除收藏">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).filter(Boolean).join('');
+
+        favoritesList.innerHTML = favoritesHTML;
+
+        // 添加移除收藏的事件監聽
+        favoritesList.querySelectorAll('.remove-favorite').forEach(button => {
             button.addEventListener('click', (e) => {
-                const gameId = e.currentTarget.dataset.game;
+                e.preventDefault();
+                const favoriteItem = button.closest('.favorite-item');
+                const gameId = favoriteItem.dataset.gameId;
                 const index = favorites.indexOf(gameId);
-                if (index !== -1) {
+                
+                if (index > -1) {
                     favorites.splice(index, 1);
                     localStorage.setItem('gameFavorites', JSON.stringify(favorites));
-                    updateFavoritesList();
                     
-                    const favoriteButton = document.querySelector(`#${gameId} .favorite-button`);
-                    if (favoriteButton) {
-                        favoriteButton.classList.remove('active');
-                        favoriteButton.innerHTML = '<i class="fas fa-heart-o"></i> 收藏遊戲';
+                    // 更新收藏按鈕狀態
+                    const gameSection = document.getElementById(gameId);
+                    const favoriteBtn = gameSection?.querySelector('.favorite-btn');
+                    if (favoriteBtn) {
+                        favoriteBtn.classList.remove('active');
+                        favoriteBtn.title = '加入收藏';
                     }
+                    
+                    // 移除收藏項目
+                    favoriteItem.classList.add('fade-out');
+                    setTimeout(() => {
+                        favoriteItem.remove();
+                        if (favorites.length === 0) {
+                            updateFavoritesList(); // 重新渲染空列表
+                        }
+                    }, 300);
+                    
+                    NotificationSystem.show('已從收藏移除', 'info');
                 }
             });
         });
     }
-    
-    function createFavoritesList() {
-        const favoritesSection = document.createElement('div');
-        favoritesSection.className = 'favorites-section';
-        favoritesSection.innerHTML = `
-            <h3><i class="fas fa-heart"></i> 收藏的遊戲</h3>
-            <div id="favoritesList"></div>
-        `;
-        
-        const mainContent = document.querySelector('main');
-        mainContent.insertBefore(favoritesSection, mainContent.firstChild);
-        updateFavoritesList();
-    }
-    
-    function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 2000);
-        }, 100);
-    }
-    
+
+    // 為每個遊戲區塊添加收藏按鈕
     document.querySelectorAll('.game-section').forEach(addFavoriteButton);
-    createFavoritesList();
+    
+    // 初始化收藏列表
+    updateFavoritesList();
 }
 
 // 遊戲分享功能
 function initializeShareSystem() {
     function addShareButton(gameSection) {
-        const gameInfo = gameSection.querySelector('.game-info');
         const gameId = gameSection.id;
-        const gameTitle = gameSection.querySelector('h2').textContent;
-        const gameUrl = `${window.location.origin}${window.location.pathname}#${gameId}`;
-        
-        const shareButton = document.createElement('button');
-        shareButton.className = 'share-button';
-        shareButton.innerHTML = '<i class="fas fa-share-alt"></i> 分享遊戲';
-        
-        shareButton.addEventListener('click', () => {
-            if (navigator.share) {
-                navigator.share({
-                    title: gameTitle,
-                    text: `來玩「${gameTitle}」吧！`,
-                    url: gameUrl
-                })
-                .then(() => NotificationSystem.show('分享成功！'))
-                .catch(() => showShareDialog(gameTitle, gameUrl));
-            } else {
-                showShareDialog(gameTitle, gameUrl);
-            }
-        });
-        
-        gameInfo.insertBefore(shareButton, gameInfo.querySelector('.play-button'));
-    }
-    
-    function showShareDialog(gameTitle, gameUrl) {
-        const dialog = document.createElement('div');
-        dialog.className = 'share-dialog';
-        dialog.innerHTML = `
-            <div class="share-content">
-                <h3>分享遊戲</h3>
-                <div class="share-options">
-                    <button class="share-option" data-platform="facebook">
-                        <i class="fab fa-facebook"></i> Facebook
-                    </button>
-                    <button class="share-option" data-platform="twitter">
-                        <i class="fab fa-twitter"></i> Twitter
-                    </button>
-                    <button class="share-option" data-platform="line">
-                        <i class="fab fa-line"></i> LINE
-                    </button>
-                    <button class="share-option copy-link">
-                        <i class="fas fa-link"></i> 複製連結
-                    </button>
-                </div>
-                <button class="close-dialog">關閉</button>
-            </div>
-        `;
-        
-        document.body.appendChild(dialog);
-        
-        dialog.querySelector('.close-dialog').addEventListener('click', () => {
-            dialog.remove();
-        });
-        
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
-                dialog.remove();
-            }
-        });
-        
-        dialog.querySelectorAll('.share-option').forEach(button => {
-            button.addEventListener('click', () => {
-                const platform = button.dataset.platform;
-                let shareUrl = '';
-                
-                switch (platform) {
-                    case 'facebook':
-                        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(gameUrl)}`;
-                        break;
-                    case 'twitter':
-                        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`來玩「${gameTitle}」吧！`)}&url=${encodeURIComponent(gameUrl)}`;
-                        break;
-                    case 'line':
-                        shareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(gameUrl)}`;
-                        break;
-                    default:
-                        // 複製連結
-                        navigator.clipboard.writeText(gameUrl)
-                            .then(() => {
-                                NotificationSystem.show('連結已複製到剪貼簿！');
-                                dialog.remove();
-                            });
-                        return;
+        const existingButton = gameSection.querySelector('.share-btn');
+        if (existingButton) return;
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'share-btn';
+        shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+        shareBtn.title = '分享遊戲';
+
+        shareBtn.addEventListener('click', async () => {
+            const gameTitle = gameSection.querySelector('h2').textContent;
+            const gameDescription = gameSection.querySelector('.game-description')?.textContent || '';
+            const gameUrl = `${window.location.origin}/#${gameId}`;
+            
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: gameTitle,
+                        text: gameDescription,
+                        url: gameUrl
+                    });
+                    NotificationSystem.show('分享成功！', 'success');
+                } else {
+                    // 回退到剪貼簿
+                    await navigator.clipboard.writeText(
+                        `${gameTitle}\n${gameDescription}\n${gameUrl}`
+                    );
+                    NotificationSystem.show('已複製遊戲連結到剪貼簿', 'success');
                 }
-                
-                window.open(shareUrl, '_blank');
-                dialog.remove();
-            });
+            } catch (error) {
+                if (error.name !== 'AbortError') {  // 忽略用戶取消的錯誤
+                    NotificationSystem.show('分享失敗，請稍後再試', 'error');
+                    console.error('分享失敗:', error);
+                }
+            }
         });
+
+        const controlsContainer = gameSection.querySelector('.game-controls');
+        if (controlsContainer) {
+            controlsContainer.appendChild(shareBtn);
+        }
     }
-    
+
+    // 為每個遊戲區塊添加分享按鈕
     document.querySelectorAll('.game-section').forEach(addShareButton);
 }
 
