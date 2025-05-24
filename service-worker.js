@@ -7,8 +7,8 @@ const CACHE_STRATEGY = {
     styles: 'cache-first',
     scripts: 'network-first',
     pages: 'network-first',
-    api: 'network-only',
-    sounds: 'cache-first'
+    api: 'network-only',    sounds: 'cache-first',
+    error: 'network-first-with-fallback'
 };
 
 // 預快取資源列表
@@ -62,6 +62,21 @@ async function fetchWithRetry(request, maxRetries = 3) {
     let lastError;
     const url = new URL(request.url);
     const resourceType = getResourceType(url);
+    
+    // 處理錯誤日誌 API
+    if (url.pathname === '/api/log-error') {
+        try {
+            const response = await fetch(request);
+            if (response.ok) return response;
+            throw new Error(`HTTP error! status: ${response.status}`);
+        } catch (error) {
+            console.warn('錯誤日誌傳送失敗，將在連線恢復後重試');
+            return new Response(JSON.stringify({ status: 'queued' }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    }
+    
     const strategy = CACHE_STRATEGY[resourceType] || 'network-first';
     
     // 快取優先策略

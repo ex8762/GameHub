@@ -12,10 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeRecommendationSystem();
         initializeFavoriteSystem();
         initializeShareSystem();
-        initializeAnalytics();
-    } catch (error) {
+        initializeAnalytics();    } catch (error) {
         console.error('初始化錯誤:', error);
-        NotificationSystem.show('某些功能可能無法使用', 'error');
+        ErrorHandler.showError('某些功能可能無法使用: ' + error.message);
     }
 });
 
