@@ -34,62 +34,79 @@ function initializeMainFeatures() {
     initializeAnalytics();
 }
 
-        init() {
-            // 確保容器存在
-            if (!document.getElementById('notification-container')) {
-                const container = document.createElement('div');
-                container.id = 'notification-container';
-                document.body.appendChild(container);
+// 定義通知系統
+const NotificationSystem = {
+    sounds: {
+        info: null,
+        success: 'success-sound',
+        warning: 'warning-sound',
+        error: 'error-sound'
+    },
+    queue: [],
+    isProcessing: false,
+    types: {
+        INFO: 'info',
+        SUCCESS: 'success',
+        WARNING: 'warning',
+        ERROR: 'error'
+    },
+
+    init() {
+        // 確保容器存在
+        if (!document.getElementById('notification-container')) {
+            const container = document.createElement('div');
+            container.id = 'notification-container';
+            document.body.appendChild(container);
+        }
+
+        // 初始化音效
+        this.initSounds();
+    },
+
+    initSounds() {
+        const soundsPath = 'assets/sounds/';
+        Object.entries(this.sounds).forEach(([type, filename]) => {
+            if (filename) {
+                const audio = new Audio(`${soundsPath}${filename}.mp3`);
+                audio.preload = 'auto';
+                this.sounds[type] = audio;
             }
+        });
+    },
 
-            // 初始化音效
-            this.initSounds();
-        },
+    show(message, type = 'info', options = {}) {
+        const defaultOptions = {
+            duration: 5000,
+            progress: true,
+            sound: true,
+            closeable: true
+        };
 
-        initSounds() {
-            const soundsPath = 'assets/sounds/';
-            Object.entries(this.sounds).forEach(([type, filename]) => {
-                if (filename) {
-                    const audio = new Audio(`${soundsPath}${filename}.mp3`);
-                    audio.preload = 'auto';
-                    this.sounds[type] = audio;
-                }
-            });
-        },
+        const finalOptions = {...defaultOptions, ...options };
 
-        show(message, type = 'info', options = {}) {
-            const defaultOptions = {
-                duration: 5000,
-                progress: true,
-                sound: true,
-                closeable: true
-            };
+        // 添加到隊列
+        this.queue.push({ message, type, options: finalOptions });
 
-            const finalOptions = {...defaultOptions, ...options };
+        // 如果沒有正在處理的通知，開始處理
+        if (!this.isProcessing) {
+            this.processQueue();
+        }
+    },
 
-            // 添加到隊列
-            this.queue.push({ message, type, options: finalOptions });
+    async processQueue() {
+        if (this.queue.length === 0) {
+            this.isProcessing = false;
+            return;
+        }
 
-            // 如果沒有正在處理的通知，開始處理
-            if (!this.isProcessing) {
-                this.processQueue();
-            }
-        },
+        this.isProcessing = true;
+        const { message, type, options } = this.queue.shift();
 
-        async processQueue() {
-            if (this.queue.length === 0) {
-                this.isProcessing = false;
-                return;
-            }
-
-            this.isProcessing = true;
-            const { message, type, options } = this.queue.shift();
-
-            // 創建通知元素
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.setAttribute('role', 'alert');
-            notification.innerHTML = `
+        // 創建通知元素
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.setAttribute('role', 'alert');
+        notification.innerHTML = `
             <div class="notification-content">
                 <i class="fas ${this.getIconClass(type)}"></i>
                 <span>${message}</span>
