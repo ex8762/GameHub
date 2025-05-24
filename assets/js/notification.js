@@ -1,10 +1,8 @@
 ﻿// 通知系統
-class NotificationSystem {
-    constructor() {
-        this.container = null;
-        this.queue = [];
-        this.isProcessing = false;
-    }
+const NotificationSystem = {
+    container: null,
+    queue: [],
+    isProcessing: false,
 
     init() {
         // 確保容器存在
@@ -15,7 +13,7 @@ class NotificationSystem {
         } else {
             this.container = document.getElementById("notification-container");
         }
-    }
+    },
 
     show(message, type = "info", options = {}) {
         if (!message || !this.container) return;
@@ -43,7 +41,7 @@ class NotificationSystem {
         if (!this.isProcessing) {
             this.processQueue();
         }
-    }
+    },
 
     async processQueue() {
         if (this.isProcessing || this.queue.length === 0) return;
@@ -70,7 +68,7 @@ class NotificationSystem {
         }
 
         this.isProcessing = false;
-    }
+    },
 
     async close(notification) {
         if (!notification) return;
@@ -78,7 +76,7 @@ class NotificationSystem {
         notification.style.animation = "slideOut 0.3s ease-out";
         await new Promise(resolve => setTimeout(resolve, 300));
         notification.remove();
-    }
+    },
 
     getIconClass(type) {
         switch (type) {
@@ -94,15 +92,7 @@ class NotificationSystem {
     }
 }
 
-// 初始化通知系統
-if (!window._notificationSystemInitialized) {
-    const notificationSystem = new NotificationSystem();
-    document.addEventListener("DOMContentLoaded", () => {
-        notificationSystem.init();
-    });
-    window.showNotification = (message, type = "info", options = {}) => {
-        return notificationSystem.show(message, type, options);
-    };
-    window.NotificationSystem = notificationSystem;
-    window._notificationSystemInitialized = true;
-}
+document.addEventListener('DOMContentLoaded', () => {
+    NotificationSystem.init();
+    window.NotificationSystem = NotificationSystem;
+});

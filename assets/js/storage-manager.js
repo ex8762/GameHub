@@ -164,6 +164,8 @@ const StorageManager = {
     }
 };
 
+window.StorageManager = StorageManager;
+
 // 確保在頁面加載時初始化
 document.addEventListener('DOMContentLoaded', () => {
     StorageManager.init().catch(error => {

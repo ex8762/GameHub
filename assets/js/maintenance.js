@@ -13,7 +13,7 @@ class MaintenanceSystem {
     init() {
         // 註冊預設維護任務
         this.registerTask('checkStorage', async () => {
-            await window.storageManager.maintenance();
+            await window.StorageManager.maintenance();
         }, 30 * 60 * 1000); // 每30分鐘
         
         this.registerTask('syncErrors', async () => {
