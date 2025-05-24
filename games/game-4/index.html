@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生存遊戲 - Game 4</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- HUD 顯示區域 -->
+    <div id="hud">
+        <div class="status-bars">
+            <div class="status-bar" id="health-bar">
+                <span class="label">生命值</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+            <div class="status-bar" id="hunger-bar">
+                <span class="label">飢餓度</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+            <div class="status-bar" id="thirst-bar">
+                <span class="label">口渴度</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+        </div>
+        <div class="game-info">
+            <div id="temperature">溫度: 20°C</div>
+            <div id="survival-time">生存時間: 00:00:00</div>
+        </div>
+    </div>
+
+    <!-- 遊戲主畫面 -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- 物品欄 -->
+    <div id="inventory">
+        <div class="inventory-grid"></div>
+    </div>
+
+    <!-- 製作選單 -->
+    <div id="crafting-menu" class="hidden">
+        <h2>製作選單</h2>
+        <div class="crafting-grid"></div>
+    </div>
+
+    <!-- 地圖 -->
+    <div id="map-overlay" class="hidden">
+        <canvas id="map-canvas"></canvas>
+    </div>
+
+    <!-- 設置面板 -->
+    <div id="settings-panel" class="hidden">
+        <h2>設置</h2>
+        <div class="settings-content">
+            <div class="setting-item">
+                <label for="sound-volume">音效音量</label>
+                <input type="range" id="sound-volume" min="0" max="100" value="100">
+            </div>
+            <div class="setting-item">
+                <label for="music-volume">背景音樂音量</label>
+                <input type="range" id="music-volume" min="0" max="100" value="100">
+            </div>
+            <button id="save-settings">保存設置</button>
+        </div>
+    </div>    <!-- 載入腳本 -->
+    <script type="module">
+        import { SoundManager } from './js/sound-manager.js';
+        
+        // 初始化音效系統
+        window.addEventListener('DOMContentLoaded', () => {
+            const soundManager = SoundManager.getInstance();
+            // 預載入音效
+            soundManager.loadSound('craft');
+            soundManager.loadSound('error');
+        });
+    </script>
+    <script src="js/constants.js" type="module"></script>
+    <script src="js/game.js" type="module"></script>
+</body>
+</html>
