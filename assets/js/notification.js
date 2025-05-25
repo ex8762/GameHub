@@ -94,5 +94,7 @@ const NotificationSystem = {
 
 document.addEventListener('DOMContentLoaded', () => {
     NotificationSystem.init();
-    window.NotificationSystem = NotificationSystem;
+    if (!window.NotificationSystem) {
+        window.NotificationSystem = NotificationSystem;
+    }
 });
