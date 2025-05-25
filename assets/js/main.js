@@ -1676,3 +1676,19 @@ setInterval(() => {
 
 // 導出監控系統供其他模組使用
 window.StorageMonitor = StorageMonitor;
+
+// 主要的 JavaScript 功能
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ...existing code...
+
+    // 使用 window.storageManager 和 window.notificationSystem
+    if (window.storageManager && window.notificationSystem) {
+        const theme = window.storageManager.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // ...existing code...
+    } else {
+        console.error('storageManager or notificationSystem is not defined');
+    }
+});

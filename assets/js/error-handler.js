@@ -30,6 +30,8 @@ var ErrorHandler = {
 
         if (window.showNotification) {
             window.showNotification(errorInfo.message, level);
+        } else if (window.notificationSystem) {
+            window.notificationSystem.show('錯誤', errorInfo.message, { icon: 'assets/img/error-icon.png' });
         }
     },
 
