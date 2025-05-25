@@ -101,6 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 即時通知系統
 (function() {
+    if (window.notificationSystem) {
+        console.log('notificationSystem already defined.');
+        return;
+    }
+
     const notificationSystem = {
         show: function(title, message, options = {}) {
             if (Notification.permission === 'granted') {

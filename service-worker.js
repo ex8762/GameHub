@@ -161,7 +161,6 @@ self.addEventListener('message', event => {
     if (event.data.type === 'SHOW_NOTIFICATION') {
         self.registration.showNotification(event.data.title, {
             body: event.data.message,
-            icon: event.data.icon || 'assets/img/icon.png'
         });
     }
 });

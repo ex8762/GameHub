@@ -179,6 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 (function() {
+    if (window.storageManager) {
+        console.log('storageManager already defined.');
+        return;
+    }
+
     const storageManager = {
         setItem: function(key, value) {
             localStorage.setItem(key, JSON.stringify(value));
