@@ -52,6 +52,13 @@ var ErrorHandler = {
 
     showError(message) {
         this.handleError(new Error(message), this.errorLevels.ERROR);
+        
+        // 使用 window.notificationSystem
+        if (window.notificationSystem) {
+            window.notificationSystem.show('錯誤', message, { icon: 'assets/img/error-icon.png' }); // 確保 error-icon.png 存在於此路徑
+        } else {
+            console.error('notificationSystem is not defined');
+        }
     },
 
     showWarning(message) {
