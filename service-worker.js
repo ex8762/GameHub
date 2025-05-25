@@ -188,3 +188,13 @@ setInterval(cleanupCache, 6 * 60 * 60 * 1000);
 
 // 初始清理
 cleanupCache();
+
+const cacheResponse = async (cacheName, req, res) => {
+  if (res.status === 206) {
+    console.warn(`Partial response (206) for ${req.url} will not be cached.`);
+    return;
+  }
+
+  const cache = await caches.open(cacheName);
+  await cache.put(req, res.clone());
+};

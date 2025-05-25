@@ -98,3 +98,30 @@ document.addEventListener('DOMContentLoaded', () => {
         window.NotificationSystem = NotificationSystem;
     }
 });
+
+// 即時通知系統
+(function() {
+    const notificationSystem = {
+        show: function(title, message, options = {}) {
+            if (Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: options.icon || 'assets/img/icon.png',
+                    ...options
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(title, {
+                            body: message,
+                            icon: options.icon || 'assets/img/icon.png',
+                            ...options
+                        });
+                    }
+                });
+            }
+        }
+    };
+
+    window.notificationSystem = notificationSystem;
+})();

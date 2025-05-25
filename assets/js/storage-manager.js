@@ -177,3 +177,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+(function() {
+    const storageManager = {
+        setItem: function(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        },
+        getItem: function(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key));
+            } catch (e) {
+                return null;
+            }
+        },
+        removeItem: function(key) {
+            localStorage.removeItem(key);
+        }
+    };
+
+    window.storageManager = storageManager;
+})();
