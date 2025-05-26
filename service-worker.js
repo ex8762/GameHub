@@ -1,5 +1,5 @@
-const CACHE_NAME = 'game-cache-v3';
-const OFFLINE_PAGE = '/offline.html';
+const CACHE_NAME = 'game-cache-v5';
+const OFFLINE_PAGE = './offline.html';
 
 // 更新快取策略配置
 const CACHE_STRATEGY = {
@@ -7,23 +7,17 @@ const CACHE_STRATEGY = {
     styles: 'cache-first',
     scripts: 'network-first',
     pages: 'network-first',
-    api: 'network-only',    sounds: 'cache-first',
-    error: 'network-first-with-fallback'
+    api: 'network-only',
+    sounds: 'cache-first'
 };
 
-// 預快取資源列表
+// 預快取資源列表 - 只包含確實存在的文件
 const PRE_CACHE_URLS = [
-    '/',
-    OFFLINE_PAGE,
-    '/index.html',
-    '/assets/css/styles.css',
-    '/assets/css/notification.css',
-    '/assets/js/main.js',
-    '/assets/js/error-handler.js',
-    '/assets/js/notification.js',
-    '/assets/sounds/success-sound.mp3',
-    '/assets/sounds/warning-sound.mp3',
-    '/assets/sounds/error-sound.mp3'
+    './',
+    './offline.html',
+    './index.html',
+    './assets/css/styles.css'
+    // 移除可能不存在的資源，減少錯誤
 ];
 
 // 快取存活時間(毫秒)
@@ -58,70 +52,68 @@ function getResourceType(url) {
 }
 
 // 資源載入重試機制
-async function fetchWithRetry(request, maxRetries = 3) {
-    let lastError;
+async function fetchWithRetry(request, maxRetries = 1) {
     const url = new URL(request.url);
     const resourceType = getResourceType(url);
-    
-    // 處理錯誤日誌 API
-    if (url.pathname === '/api/log-error') {
-        try {
-            const response = await fetch(request);
-            if (response.ok) return response;
-            throw new Error(`HTTP error! status: ${response.status}`);
-        } catch (error) {
-            console.warn('錯誤日誌傳送失敗，將在連線恢復後重試');
-            return new Response(JSON.stringify({ status: 'queued' }), {
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-    }
-    
     const strategy = CACHE_STRATEGY[resourceType] || 'network-first';
     
-    // 快取優先策略
-    if (strategy === 'cache-first') {
-        const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match(request);
-        if (cached) return cached;
-    }
+    // 先嘗試從快取獲取
+    const cache = await caches.open(CACHE_NAME);
     
-    // 網路請求（帶重試）
+    if (strategy === 'cache-first') {
+        const cached = await cache.match(request);
+        if (cached) {
+            return cached;
+        }
+    }
+
+    // 嘗試網路請求
+    let lastError;
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(request.clone());
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
-            // 快取回應（除了 api 請求）
-            if (resourceType !== 'api') {
-                const cache = await caches.open(CACHE_NAME);
-                await cache.put(request, response.clone());
+            // 檢查回應是否有效
+            if (response && response.status >= 200 && response.status < 400) {
+                // 快取成功的回應（除了 API 請求）
+                if (resourceType !== 'api' && response.status === 200) {
+                    try {
+                        await cache.put(request, response.clone());
+                    } catch (cacheError) {
+                        console.warn('快取儲存失敗:', cacheError);
+                    }
+                }
+                return response;
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
-            return response;
         } catch (error) {
-            console.warn(`Retry ${i + 1}/${maxRetries} failed for ${request.url}:`, error);
             lastError = error;
             if (i < maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                // 指數退避延遲
+                await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)));
             }
         }
     }
-    
-    // 如果所有重試都失敗，檢查快取
+
+    // 網路請求失敗，嘗試從快取獲取
     if (strategy !== 'network-only') {
-        const cache = await caches.open(CACHE_NAME);
         const cached = await cache.match(request);
-        if (cached) return cached;
-        
-        // 如果是導航請求，返回離線頁面
-        if (request.mode === 'navigate') {
-            const offlinePage = await cache.match(OFFLINE_PAGE);
-            if (offlinePage) return offlinePage;
+        if (cached) {
+            return cached;
         }
     }
-    
-    throw lastError;
+
+    // 如果是導航請求且沒有快取，返回離線頁面
+    if (request.mode === 'navigate' || request.destination === 'document') {
+        const offlinePage = await cache.match(OFFLINE_PAGE);
+        if (offlinePage) {
+            return offlinePage;
+        }
+    }
+
+    // 所有嘗試都失敗
+    throw lastError || new Error('Network request failed');
 }
 
 // Service Worker 事件處理
@@ -146,14 +138,55 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    if (!event.request.url.startsWith(self.location.origin)) return;
+    // 只處理同源請求
+    if (!event.request.url.startsWith(self.location.origin)) {
+        return;
+    }
     
+    // 跳過某些特殊請求
+    if (event.request.method !== 'GET' || 
+        event.request.url.includes('chrome-extension://') ||
+        event.request.url.includes('moz-extension://') ||
+        event.request.url.includes('/sw.js') ||
+        event.request.url.includes('/service-worker.js')) {
+        return;
+    }
+    
+    // 使用更簡單的響應處理方式減少錯誤
     event.respondWith(
-        fetchWithRetry(event.request)
-            .catch(error => {
-                console.error('請求失敗:', error);
-                return caches.match(OFFLINE_PAGE);
-            })
+        caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            
+            return fetch(event.request).then(response => {
+                // 檢查回應是否有效
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                }
+                
+                // 將回應保存到快取中
+                let responseToCache = response.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+                
+                return response;
+            }).catch(error => {
+                console.warn('Service Worker 請求失敗:', event.request.url, error);
+                
+                // 如果是HTML頁面請求，返回離線頁面
+                if (event.request.mode === 'navigate') {
+                    return caches.match(OFFLINE_PAGE);
+                }
+                
+                // 返回簡單的錯誤響應
+                return new Response('資源無法載入', {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+            });
+        })
     );
 });
 
@@ -188,13 +221,3 @@ setInterval(cleanupCache, 6 * 60 * 60 * 1000);
 
 // 初始清理
 cleanupCache();
-
-const cacheResponse = async (cacheName, req, res) => {
-  if (res.status === 206) {
-    console.warn(`Partial response (206) for ${req.url} will not be cached.`);
-    return;
-  }
-
-  const cache = await caches.open(cacheName);
-  await cache.put(req, res.clone());
-};

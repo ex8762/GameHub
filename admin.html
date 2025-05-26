@@ -593,6 +593,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="assets/js/error-handler.js"></script>
     <script src="assets/js/admin.js"></script>
+    <script src="assets/js/analytics.js"></script>
     <script>
         // 載入狀態控制
         const loadingSpinner = document.getElementById('loadingSpinner');
@@ -701,29 +702,42 @@
         }
 
         function updateCharts(stats) {
+            // 檢查圖表是否存在
+            if (!window.charts) return;
+            
             // 更新每日訪問圖表
-            charts.dailyVisits.data.datasets[0].data = stats.dailyVisits;
-            charts.dailyVisits.update();
+            if (window.charts.dailyVisits) {
+                window.charts.dailyVisits.data.datasets[0].data = stats.dailyVisits;
+                window.charts.dailyVisits.update();
+            }
 
             // 更新遊戲比較圖表
-            charts.gamesComparison.data.datasets[0].data = Object.values(stats.gameStats).map(game => game.plays);
-            charts.gamesComparison.update();
+            if (window.charts.gamesComparison) {
+                window.charts.gamesComparison.data.datasets[0].data = Object.values(stats.gameStats).map(game => game.plays);
+                window.charts.gamesComparison.update();
+            }
 
             // 更新活躍時段圖表
-            let activeHours = stats.activeHours;
-            if (!Array.isArray(activeHours) || activeHours.length !== 24) {
-                activeHours = Array(24).fill(0);
+            if (window.charts.activeHours) {
+                let activeHours = stats.activeHours;
+                if (!Array.isArray(activeHours) || activeHours.length !== 24) {
+                    activeHours = Array(24).fill(0);
+                }
+                window.charts.activeHours.data.datasets[0].data = activeHours;
+                window.charts.activeHours.update();
             }
-            charts.activeHours.data.datasets[0].data = activeHours;
-            charts.activeHours.update();
 
             // 更新瀏覽器分布圖表
-            charts.browser.data.datasets[0].data = Object.values(stats.browserStats);
-            charts.browser.update();
+            if (window.charts.browser) {
+                window.charts.browser.data.datasets[0].data = Object.values(stats.browserStats);
+                window.charts.browser.update();
+            }
 
             // 更新裝置分布圖表
-            charts.platform.data.datasets[0].data = Object.values(stats.platformStats);
-            charts.platform.update();
+            if (window.charts.platform) {
+                window.charts.platform.data.datasets[0].data = Object.values(stats.platformStats);
+                window.charts.platform.update();
+            }
         }
 
         // 圖表初始化
