@@ -4,11 +4,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="遊戲天地 - 提供各種免費的網頁遊戲，包括射擊、益智、解謎等多種類型。">
+    <meta name="keywords" content="網頁遊戲, 免費遊戲, 射擊遊戲, 益智遊戲, 休閒遊戲">
+    <meta name="theme-color" content="#2196f3">
+    <meta property="og:title" content="遊戲天地 - 精選網頁遊戲">
+    <meta property="og:description" content="探索多樣化的遊戲世界，盡情享受遊戲的樂趣！">
+    <meta property="og:type" content="website">
     <title>遊戲天地 - 精選網頁遊戲</title>
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/rating-fix.css">
+    <link rel="stylesheet" href="assets/css/simple-rating.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/images/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
     <!-- 優先載入兼容性修復腳本 -->
     <script src="assets/js/browser-compatibility-fix.js"></script>
+    <!-- Direct inline rating functionality script with complete replacement -->
+    <script>
+    // Function to initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Starting completely rebuilt rating system');
+        
+        // Find all rating containers
+        const starContainers = document.querySelectorAll('.stars-input');
+        console.log(`Found ${starContainers.length} star containers`);
+        
+        // Process each container
+        starContainers.forEach(function(container) {
+            // Save the container's parent
+            const parent = container.parentNode;
+            const form = container.closest('form');
+            
+            // Create a new container
+            const newContainer = document.createElement('div');
+            newContainer.className = 'rating-buttons-container';
+            newContainer.style.display = 'flex';
+            newContainer.style.gap = '10px';
+            newContainer.style.alignItems = 'center';
+            newContainer.style.marginTop = '10px';
+            newContainer.style.marginBottom = '10px';
+            
+            // Create a text label
+            const label = document.createElement('span');
+            label.textContent = '評分：';
+            label.style.marginRight = '10px';
+            newContainer.appendChild(label);
+            
+            // Create a hidden input for the rating
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'direct_rating';
+            hiddenInput.value = '';
+            if (form) {
+                form.appendChild(hiddenInput);
+            }
+            
+            // Create 5 star buttons
+            for (let i = 1; i <= 5; i++) {
+                const starButton = document.createElement('button');
+                starButton.type = 'button'; // Important: not submit
+                starButton.setAttribute('data-rating', i);
+                starButton.className = 'star-button';
+                starButton.innerHTML = '<i class="far fa-star"></i>';
+                
+                // Style the button
+                starButton.style.background = 'transparent';
+                starButton.style.border = 'none';
+                starButton.style.color = '#ddd';
+                starButton.style.fontSize = '24px';
+                starButton.style.cursor = 'pointer';
+                starButton.style.padding = '8px';
+                starButton.style.margin = '0';
+                starButton.style.outline = 'none';
+                
+                // Add click event
+                starButton.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    console.log(`Star button ${rating} clicked`);
+                    
+                    // Update all buttons
+                    const buttons = newContainer.querySelectorAll('.star-button');
+                    buttons.forEach(function(btn) {
+                        const btnRating = parseInt(btn.getAttribute('data-rating'));
+                        const icon = btn.querySelector('i');
+                        
+                        if (btnRating <= rating) {
+                            icon.className = 'fas fa-star';
+                            btn.style.color = '#FFC107';
+                        } else {
+                            icon.className = 'far fa-star';
+                            btn.style.color = '#ddd';
+                        }
+                    });
+                    
+                    // Store the rating
+                    hiddenInput.value = rating;
+                    console.log(`Set rating: ${rating}`);
+                });
+                
+                // Add hover effects
+                starButton.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    
+                    // Highlight this and previous stars
+                    const buttons = newContainer.querySelectorAll('.star-button');
+                    buttons.forEach(function(btn) {
+                        const btnRating = parseInt(btn.getAttribute('data-rating'));
+                        const icon = btn.querySelector('i');
+                        
+                        if (btnRating <= rating) {
+                            icon.className = 'fas fa-star';
+                            btn.style.color = '#FFC107';
+                        }
+                    });
+                });
+                
+                // Add mouseleave to revert to selected state
+                newContainer.addEventListener('mouseleave', function() {
+                    const selectedRating = parseInt(hiddenInput.value) || 0;
+                    
+                    // Reset to selected state
+                    const buttons = newContainer.querySelectorAll('.star-button');
+                    buttons.forEach(function(btn) {
+                        const btnRating = parseInt(btn.getAttribute('data-rating'));
+                        const icon = btn.querySelector('i');
+                        
+                        if (btnRating <= selectedRating) {
+                            icon.className = 'fas fa-star';
+                            btn.style.color = '#FFC107';
+                        } else {
+                            icon.className = 'far fa-star';
+                            btn.style.color = '#ddd';
+                        }
+                    });
+                });
+                
+                newContainer.appendChild(starButton);
+            }
+            
+            // Replace the original container with our new one
+            parent.replaceChild(newContainer, container);
+            console.log('Replaced star container with button-based implementation');
+        });
+        
+        // Fix form submission to use our rating
+        document.querySelectorAll('.comment-form').forEach(function(form) {
+            // Replace existing event handler to avoid conflicts
+            const newForm = form.cloneNode(true);
+            if (form.parentNode) {
+                form.parentNode.replaceChild(newForm, form);
+            }
+            
+            // Add our direct submit handler
+            newForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Form submission handler triggered');
+                
+                // Get the direct rating from our hidden field
+                const hiddenRating = this.querySelector('input[name="direct_rating"]');
+                if (!hiddenRating || !hiddenRating.value) {
+                    alert('請選擇 1-5 星的評分');
+                    console.log('Rating missing, stopping submission');
+                    return false;
+                }
+                
+                const rating = parseInt(hiddenRating.value);
+                console.log(`Submitting with rating: ${rating}`);
+                
+                const gameId = this.dataset.game;
+                const username = this.querySelector('[name="username"]').value;
+                const comment = this.querySelector('[name="comment"]').value;
+                
+                // Create comment data
+                const commentData = {
+                    username: username,
+                    content: comment,
+                    rating: rating,
+                    date: new Date().toLocaleDateString()
+                };
+                
+                console.log('Comment data:', commentData);
+                
+                // Save comment using the original function if available
+                if (typeof saveComment === 'function') {
+                    saveComment(gameId, commentData);
+                }
+                
+                // Update game rating
+                if (typeof updateGameRating === 'function') {
+                    updateGameRating(gameId, rating);
+                }
+                
+                // Add comment to the page
+                const commentsList = document.getElementById(`${gameId}-comments`);
+                if (commentsList) {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <span class="comment-username">${username}</span>
+                            <span class="comment-date">${commentData.date}</span>
+                        </div>
+                        <div class="comment-content">${comment}</div>
+                        <div class="comment-rating">
+                            ${Array(5).fill().map((_, i) => 
+                                `<i class="${i < rating ? 'fas' : 'far'} fa-star"></i>`
+                            ).join('')}
+                        </div>
+                    `;
+                    commentsList.appendChild(commentElement);
+                }
+                
+                // Reset the form
+                this.reset();
+                
+                // Reset the stars by clearing the hidden input
+                if (hiddenRating) {
+                    hiddenRating.value = '';
+                }
+                
+                // Find and reset any new rating containers
+                const ratingContainer = document.querySelector('.rating-buttons-container');
+                if (ratingContainer) {
+                    const buttons = ratingContainer.querySelectorAll('.star-button');
+                    buttons.forEach(function(btn) {
+                        const icon = btn.querySelector('i');
+                        icon.className = 'far fa-star';
+                        btn.style.color = '#ddd';
+                    });
+                }
+                
+                return false;
+            });
+        });
+    });
+    </script>
     <style>
          :root {
             --bg-color: #ffffff;
@@ -142,27 +373,44 @@
         .comment-rating {
             color: #ffd700;
         }
-        
+
         .comment-rating i {
             margin-right: 2px;
         }
     </style>
+    <!-- 主題切換和可訪問性功能 -->
     <script>
         // 主題切換功能
         document.addEventListener('DOMContentLoaded', () => {
             const themeSwitch = document.getElementById('themeSwitch');
             const themeIcon = themeSwitch.querySelector('i');
 
-            // 從本地儲存讀取主題設定
+            // 檢查是否有保存的主題設定或系統偏好
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
+
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                if (savedTheme === 'dark') {
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            } else if (prefersDarkScheme.matches) {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
             }
 
-            themeSwitch.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            // 主題切換事件 - 支援鍵盤訪問
+            themeSwitch.addEventListener('click', toggleTheme);
+            themeSwitch.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
                 document.documentElement.setAttribute('data-theme', newTheme);
                 themeIcon.classList.replace(
@@ -170,25 +418,42 @@
                     newTheme === 'dark' ? 'fa-sun' : 'fa-moon'
                 );
 
+                // 更新ARIA標籤
+                themeSwitch.setAttribute('aria-label',
+                    newTheme === 'dark' ? '切換淺色模式' : '切換深色模式');
+
                 // 儲存主題設定
                 localStorage.setItem('theme', newTheme);
+            }
+
+            // 監聽系統主題變化
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    themeIcon.classList.replace(
+                        newTheme === 'dark' ? 'fa-moon' : 'fa-sun',
+                        newTheme === 'dark' ? 'fa-sun' : 'fa-moon'
+                    );
+                }
             });
         });
     </script>
 </head>
 
 <body>
-    <div class="theme-switch" id="themeSwitch">
-        <i class="fas fa-moon"></i>
+    <div class="theme-switch" id="themeSwitch" role="button" tabindex="0" aria-label="切換深色模式">
+        <i class="fas fa-moon" aria-hidden="true"></i>
     </div>
     <header>
         <nav>
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-bars"></i>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="開啟選單" aria-expanded="false" aria-controls="navMenu">
+                <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
             <div class="logo-container">
                 <h1><i class="fas fa-gamepad"></i> 遊戲天地</h1>
             </div>
+            <ul id="navMenu" role="menu">
             <ul class="nav-links">
                 <li><a href="#shooting-game"><i class="fas fa-crosshairs"></i> 射擊遊戲</a></li>
                 <li><a href="#simulation-game"><i class="fas fa-city"></i> 模擬經營</a></li>
@@ -201,9 +466,9 @@
     <div class="search-container">
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="gameSearch" placeholder="搜尋遊戲...">
-            <button class="clear-search" id="clearSearch">
-                <i class="fas fa-times"></i>
+            <input type="text" id="gameSearch" placeholder="搜尋遊戲..." aria-label="搜尋遊戲">
+            <button class="clear-search" id="clearSearch" aria-label="清除搜尋">
+                <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </div>
         <div class="search-filters">
@@ -311,12 +576,21 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="stars-input">
-                                <i class="far fa-star" data-rating="1"></i>
-                                <i class="far fa-star" data-rating="2"></i>
-                                <i class="far fa-star" data-rating="3"></i>
-                                <i class="far fa-star" data-rating="4"></i>
-                                <i class="far fa-star" data-rating="5"></i>
+                            <div class="simple-rating">
+                                <input type="radio" id="star5-${formId}" name="rating" value="5">
+                                <label for="star5-${formId}"></label>
+                                
+                                <input type="radio" id="star4-${formId}" name="rating" value="4">
+                                <label for="star4-${formId}"></label>
+                                
+                                <input type="radio" id="star3-${formId}" name="rating" value="3">
+                                <label for="star3-${formId}"></label>
+                                
+                                <input type="radio" id="star2-${formId}" name="rating" value="2">
+                                <label for="star2-${formId}"></label>
+                                
+                                <input type="radio" id="star1-${formId}" name="rating" value="1">
+                                <label for="star1-${formId}"></label>
                             </div>
                         </div>
                     </div>
@@ -385,12 +659,21 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="stars-input">
-                                <i class="far fa-star" data-rating="1"></i>
-                                <i class="far fa-star" data-rating="2"></i>
-                                <i class="far fa-star" data-rating="3"></i>
-                                <i class="far fa-star" data-rating="4"></i>
-                                <i class="far fa-star" data-rating="5"></i>
+                            <div class="simple-rating">
+                                <input type="radio" id="star5-${formId}" name="rating" value="5">
+                                <label for="star5-${formId}"></label>
+                                
+                                <input type="radio" id="star4-${formId}" name="rating" value="4">
+                                <label for="star4-${formId}"></label>
+                                
+                                <input type="radio" id="star3-${formId}" name="rating" value="3">
+                                <label for="star3-${formId}"></label>
+                                
+                                <input type="radio" id="star2-${formId}" name="rating" value="2">
+                                <label for="star2-${formId}"></label>
+                                
+                                <input type="radio" id="star1-${formId}" name="rating" value="1">
+                                <label for="star1-${formId}"></label>
                             </div>
                         </div>
                     </div>
@@ -464,12 +747,21 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="stars-input">
-                                <i class="far fa-star" data-rating="1"></i>
-                                <i class="far fa-star" data-rating="2"></i>
-                                <i class="far fa-star" data-rating="3"></i>
-                                <i class="far fa-star" data-rating="4"></i>
-                                <i class="far fa-star" data-rating="5"></i>
+                            <div class="simple-rating">
+                                <input type="radio" id="star5-${formId}" name="rating" value="5">
+                                <label for="star5-${formId}"></label>
+                                
+                                <input type="radio" id="star4-${formId}" name="rating" value="4">
+                                <label for="star4-${formId}"></label>
+                                
+                                <input type="radio" id="star3-${formId}" name="rating" value="3">
+                                <label for="star3-${formId}"></label>
+                                
+                                <input type="radio" id="star2-${formId}" name="rating" value="2">
+                                <label for="star2-${formId}"></label>
+                                
+                                <input type="radio" id="star1-${formId}" name="rating" value="1">
+                                <label for="star1-${formId}"></label>
                             </div>
                         </div>
                     </div>
@@ -526,12 +818,21 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="stars-input">
-                                <i class="far fa-star" data-rating="1"></i>
-                                <i class="far fa-star" data-rating="2"></i>
-                                <i class="far fa-star" data-rating="3"></i>
-                                <i class="far fa-star" data-rating="4"></i>
-                                <i class="far fa-star" data-rating="5"></i>
+                            <div class="simple-rating">
+                                <input type="radio" id="star5-${formId}" name="rating" value="5">
+                                <label for="star5-${formId}"></label>
+                                
+                                <input type="radio" id="star4-${formId}" name="rating" value="4">
+                                <label for="star4-${formId}"></label>
+                                
+                                <input type="radio" id="star3-${formId}" name="rating" value="3">
+                                <label for="star3-${formId}"></label>
+                                
+                                <input type="radio" id="star2-${formId}" name="rating" value="2">
+                                <label for="star2-${formId}"></label>
+                                
+                                <input type="radio" id="star1-${formId}" name="rating" value="1">
+                                <label for="star1-${formId}"></label>
                             </div>
                         </div>
                     </div>
@@ -664,48 +965,82 @@
         });
 
         // 評分系統初始化
-        document.querySelectorAll('.stars-input').forEach(container => {
-            const stars = container.querySelectorAll('i');
-            stars.forEach(star => {
-                star.addEventListener('mouseover', () => {
-                    const rating = star.dataset.rating;
-                    stars.forEach(s => {
-                        if (s.dataset.rating <= rating) {
-                            s.classList.replace('far', 'fas');
-                        } else {
-                            s.classList.replace('fas', 'far');
-                        }
-                    });
+        function initializeRatingSystem() {
+            document.querySelectorAll('.stars-input').forEach(container => {
+                const stars = Array.from(container.querySelectorAll('i'));
+                
+                // 確保所有星星初始化為未選中狀態
+                stars.forEach(star => {
+                    star.classList.remove('selected');
+                    star.classList.replace('fas', 'far');
                 });
-
-                star.addEventListener('mouseout', () => {
-                    const selectedStar = container.querySelector('.fas');
-                    if (selectedStar) {
-                        const rating = selectedStar.dataset.rating;
+                
+                // 滑鼠移入時預覽評分
+                stars.forEach(star => {
+                    star.addEventListener('mouseover', function() {
+                        const rating = parseInt(this.dataset.rating);
                         stars.forEach(s => {
-                            if (s.dataset.rating <= rating) {
+                            if (parseInt(s.dataset.rating) <= rating) {
                                 s.classList.replace('far', 'fas');
                             } else {
                                 s.classList.replace('fas', 'far');
                             }
                         });
-                    } else {
-                        stars.forEach(s => s.classList.replace('fas', 'far'));
-                    }
+                    });
                 });
-
-                star.addEventListener('click', () => {
-                    const rating = star.dataset.rating;
+                
+                // 滑鼠移出時還原為已選擇的狀態
+                container.addEventListener('mouseout', function() {
+                    const selectedRating = getSelectedRating(container);
                     stars.forEach(s => {
-                        if (s.dataset.rating <= rating) {
+                        if (parseInt(s.dataset.rating) <= selectedRating) {
                             s.classList.replace('far', 'fas');
                         } else {
                             s.classList.replace('fas', 'far');
                         }
                     });
                 });
+                
+                // 點擊星星選擇評分
+                stars.forEach(star => {
+                    star.addEventListener('click', function() {
+                        const rating = parseInt(this.dataset.rating);
+                        // 取消所有星星的選擇狀態
+                        stars.forEach(s => s.classList.remove('selected'));
+                        
+                        // 給選中的星星及之前的星星添加選中狀態
+                        stars.forEach(s => {
+                            if (parseInt(s.dataset.rating) <= rating) {
+                                s.classList.replace('far', 'fas');
+                                s.classList.add('selected');
+                            } else {
+                                s.classList.replace('fas', 'far');
+                            }
+                        });
+                        
+                        // 觸發自定義事件，通知其他程式評分已更改
+                        const ratingChangedEvent = new CustomEvent('ratingChanged', {
+                            detail: { rating: rating, container: container }
+                        });
+                        document.dispatchEvent(ratingChangedEvent);
+                    });
+                });
             });
-        });
+        }
+        
+        // 獲取已選中的評分
+        function getSelectedRating(container) {
+            const selectedStar = container.querySelector('.selected');
+            return selectedStar ? parseInt(selectedStar.dataset.rating) : 0;
+        }
+        
+        // 頁面載入後初始化評分系統
+        document.addEventListener('DOMContentLoaded', initializeRatingSystem);
+        
+        // 如果頁面已經載入完成，立即初始化
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initializeRatingSystem();
+        }
 
         // 遊戲載入動畫
         function showLoadingAnimation(gameId) {
@@ -749,7 +1084,10 @@
 
             // 更新評分數據
             const currentRating = parseFloat(ratingScore.textContent);
-            const currentCount = parseInt(ratingCount.textContent);
+            // 從文字中提取數字，例如 "(10 人評分)" -> 10
+            const countText = ratingCount.textContent;
+            const countMatch = countText.match(/(\d+)/);
+            const currentCount = countMatch ? parseInt(countMatch[1]) : 0;
             const newCount = currentCount + 1;
             const newRating = ((currentRating * currentCount) + rating) / newCount;
 
@@ -835,7 +1173,63 @@
                 const gameId = form.dataset.game;
                 const username = form.querySelector('[name="username"]').value;
                 const comment = form.querySelector('[name="comment"]').value;
-                const rating = form.querySelector('.stars-input .fas')?.dataset.rating || 0;
+                
+                // 尝试获取所有可能的评分存储位置
+                let rating = 0;
+                
+                // 0. 优先检查紧急修复脚本的评分
+                const emergencyRating = form.querySelector('input[name="emergency_rating"]');
+                if (emergencyRating && emergencyRating.value) {
+                    rating = parseInt(emergencyRating.value);
+                    console.log(`Found emergency_rating input with value: ${rating}`);
+                }
+                // 1. 检查直接修复脚本的评分
+                else if (form.querySelector('input[name="direct_rating"]')) {
+                    const directRating = form.querySelector('input[name="direct_rating"]');
+                    if (directRating.value) {
+                        rating = parseInt(directRating.value);
+                        console.log(`Found direct_rating input with value: ${rating}`);
+                    }
+                } 
+                // 2. 检查 star-rating-fix.js 脚本的评分
+                else if (form.querySelector('input[name="star_rating"]')) {
+                    const starRating = form.querySelector('input[name="star_rating"]');
+                    if (starRating.value) {
+                        rating = parseInt(starRating.value);
+                        console.log(`Found star_rating input with value: ${rating}`);
+                    }
+                } 
+                // 3. 检查首次修复脚本的评分
+                else if (form.querySelector('input[name="rating"]')) {
+                    const hiddenRating = form.querySelector('input[name="rating"]');
+                    if (hiddenRating.value) {
+                        rating = parseInt(hiddenRating.value);
+                        console.log(`Found rating input with value: ${rating}`);
+                    }
+                }
+                // 4. 通过检查已选中的星星数量来判断评分
+                else {
+                    const stars = form.querySelectorAll('.stars-input i.fas');
+                    if (stars && stars.length > 0) {
+                        rating = stars.length;
+                        console.log(`Found ${stars.length} selected stars`);
+                    } else {
+                        console.log('No rating found in any expected location');
+                    }
+                }
+                
+                console.log(`Submitting form with rating: ${rating}`);
+                
+                // 确保评分是有效的数字
+                const numericRating = parseInt(rating);
+                if (isNaN(numericRating) || numericRating <= 0 || numericRating > 5) {
+                    console.error(`Invalid rating value: ${rating}, parsed as: ${numericRating}`);
+                    alert('请选择 1-5 星的评分');
+                    return;
+                }
+                
+                // 继续处理有效的评分
+                rating = numericRating; // 使用解析后的数字值
 
                 const commentData = {
                     username,
@@ -877,20 +1271,57 @@
 
         // 頁面載入時載入保存的數據
         document.addEventListener('DOMContentLoaded', () => {
-            loadGameRatings();
+            // 如果 rating-system.js 已經加載，則使用其中的函數
+            if (window.ratingSystem) {
+                window.ratingSystem.loadGameRatings();
+            } else {
+                loadGameRatings();
+            }
             loadComments();
         });
 
+        // 使用一個簡潔的評分系統解決方案
+        // 已在 HTML 頭部引入 clean-rating-fix.js
+        
         // Service Worker 註冊
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(registration => {
-                        console.log(`ServiceWorker registration successful with scope: ${registration.scope}`);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/assets/js/service-worker.js');
+                    console.log('Service Worker 註冊成功，範圍：', registration.scope);
+                    
+                    // 添加更新檢查
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // 顯示通知，提示有新版本可用
+                                const notification = document.createElement('div');
+                                notification.className = 'update-notification';
+                                notification.innerHTML = `
+                                    <p>有新版本可用！</p>
+                                    <button id="refreshApp">立即更新</button>
+                                `;
+                                document.body.appendChild(notification);
+                                
+                                document.getElementById('refreshApp').addEventListener('click', () => {
+                                    window.location.reload();
+                                });
+                            }
+                        });
                     });
+                } catch (err) {
+                    console.error('ServiceWorker registration failed: ', err);
+                    
+                    // 錯誤處理 - 添加到錯誤日誌系統
+                    if (window.ErrorHandler) {
+                        window.ErrorHandler.handle(err, {
+                            component: 'ServiceWorker',
+                            severity: 'warning',
+                            notifyUser: false
+                        });
+                    }
+                }
             });
         }
     </script>

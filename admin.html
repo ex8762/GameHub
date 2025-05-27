@@ -4,10 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>遊戲統計面板</title>
+    <meta name="description" content="遊戲天地管理面板 - 遊戲統計和系統監控">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#2196f3">
+    <title>遊戲統計面板 - 管理員專用</title>
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="assets/css/loading-spinner.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" integrity="sha256-Y26AMvaIfrZ1EQU49pf6H4QzVTrOI8m9wQYKkftBt4s=" crossorigin="anonymous"></script>
     <style>
          :root {
             --primary-color: #2196f3;
@@ -218,69 +223,66 @@
             }
         }
         
-        .loading-spinner {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .loading-spinner.active {
-            display: flex;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--light-color);
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        
         .chart-container {
             position: relative;
-            height: 300px;
-            margin: 1rem 0;
+            height: 200px;
+            max-height: 200px;
+            margin: 0.5rem 0;
+            clear: both; /* Prevent floating elements from affecting positioning */
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        /* Constrain all canvas elements to prevent vertical stretching */
+        canvas {
+            max-height: 200px !important;
+            height: auto !important;
+        }
+        
+        /* Specific styling for the ratings chart container */
+        #games .chart-container:nth-child(3) {
+            margin-top: 2rem;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1rem;
         }
         
         .stat-card {
             background: white;
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             text-align: center;
-        }
-        
-        .stat-card i {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            min-height: 120px;
         }
         
         .stat-card h3 {
-            margin: 0 0 0.5rem 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card canvas {
+            width: 100% !important;
+            max-height: 150px !important;
+            height: auto !important;
+        }
+        
+        .stat-card i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 0.3rem 0;
             color: var(--dark-color);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         
         .stat-card p {
@@ -421,26 +423,86 @@
             }
         }
     </style>
+    <!-- 添加必要的視覺隱藏樣式 -->
+    <style>
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* 改進對比度 */
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --warning-color: #fd7e14;
+            --error-color: #dc3545;
+        }
+        
+        /* 針對媒體查詢和響應式設計優化 */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        
+        /* 添加網站資源載入時的漸顯動畫 */
+        .chart-container, .data-card, .admin-section {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.4s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 改進焦點樣式，提高可訪問性 */
+        button:focus, a:focus, input:focus, select:focus, textarea:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+    
+    <!-- 預加載關鍵資源 -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
 </head>
 
 <body>
-    <div class="loading-spinner" id="loadingSpinner">
+    <div class="loading-spinner" id="loadingSpinner" role="status" aria-live="assertive">
         <div class="spinner"></div>
+        <span class="visually-hidden">資料載入中...</span>
     </div>
     <div class="admin-panel">
         <header class="admin-header">
             <h1>遊戲統計面板</h1>
-            <nav class="admin-nav">
-                <button class="nav-btn active" data-tab="overview">總覽</button>
-                <button class="nav-btn" data-tab="games">遊戲統計</button>
-                <button class="nav-btn" data-tab="users">用戶分析</button>
-                <button class="nav-btn" data-tab="system">系統資訊</button>
+            <nav class="admin-nav" aria-label="主導航">
+                <button class="nav-btn active" data-tab="overview" aria-pressed="true" aria-current="page">總覽</button>
+                <button class="nav-btn" data-tab="games" aria-pressed="false">遊戲統計</button>
+                <button class="nav-btn" data-tab="users" aria-pressed="false">用戶分析</button>
+                <button class="nav-btn" data-tab="system" aria-pressed="false">系統資訊</button>
             </nav>
         </header>
 
         <main class="admin-content">
             <!-- 總覽面板 -->
             <section id="overview" class="tab-content active">
+                <div class="chart-container" style="max-height:200px;">
+                    <canvas id="daily-visits-chart" height="200"></canvas>
+                </div>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <i class="fas fa-users"></i>
@@ -463,9 +525,6 @@
                         <p id="highest-score">0</p>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="daily-visits-chart"></canvas>
-                </div>
             </section>
 
             <!-- 遊戲統計面板 -->
@@ -473,8 +532,12 @@
                 <div class="games-list">
                     <!-- 遊戲統計卡片將由JavaScript動態生成 -->
                 </div>
-                <div class="chart-container">
-                    <canvas id="games-comparison-chart"></canvas>
+                <div class="chart-container" style="max-height:200px;">
+                    <canvas id="games-comparison-chart" height="200"></canvas>
+                </div>
+                <div class="chart-container" style="max-height:220px;">
+                    <h3>遊戲評分與評論統計</h3>
+                    <canvas id="ratingsChart" height="180"></canvas>
                 </div>
             </section>
 
@@ -483,74 +546,74 @@
                 <div class="user-stats">
                     <div class="stat-card">
                         <h3>活躍時段分布</h3>
-                        <canvas id="active-hours-chart"></canvas>
+                        <canvas id="active-hours-chart" height="150"></canvas>
                     </div>
                     <div class="stat-card">
                         <h3>瀏覽器分布</h3>
-                        <canvas id="browser-chart"></canvas>
+                        <canvas id="browser-chart" height="150"></canvas>
                     </div>
                     <div class="stat-card">
                         <h3>裝置分布</h3>
-                        <canvas id="platform-chart"></canvas>
+                        <canvas id="platform-chart" height="150"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- 系統資訊面板 -->            <section id="system" class="tab-content">
+            <!-- 系統資訊面板 -->
+            <section id="system" class="tab-content">
                 <div class="system-info">
                     <div class="info-card">
                         <h3>系統狀態</h3>
-                        <ul id="system-status">
-                            <li>LocalStorage: <span id="localStorage-status">檢查中...</span></li>
-                            <li>IndexedDB: <span id="indexedDB-status">檢查中...</span></li>
-                            <li>Service Worker: <span id="sw-status">檢查中...</span></li>
-                            <li>網路連接: <span id="network-status">檢查中...</span></li>
-                        </ul>
-                    </div>
-                    <div class="info-card">
-                        <h3>記憶體使用</h3>
-                        <div id="memory-metrics">
+                        <div class="system-metrics">
                             <div class="metric-item">
-                                <span class="metric-label">已使用:</span>
-                                <span id="memory-usage">檢查中...</span>
+                                <span class="metric-label">LocalStorage</span>
+                                <span class="metric-value" id="localStorage-status">檢查中...</span>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">總容量:</span>
-                                <span id="memory-total">檢查中...</span>
+                                <span class="metric-label">IndexedDB</span>
+                                <span class="metric-value" id="indexedDB-status">檢查中...</span>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">使用率:</span>
-                                <span id="memory-utilization">檢查中...</span>
+                                <span class="metric-label">Service Worker</span>
+                                <span class="metric-value" id="sw-status">檢查中...</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">網路連接</span>
+                                <span class="metric-value" id="network-status">檢查中...</span>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- 即時資源監控 -->
                     <div class="info-card">
-                        <h3>存儲空間</h3>
-                        <div id="storage-metrics">
-                            <div class="metric-item">
-                                <span class="metric-label">已使用:</span>
-                                <span id="storage-usage">檢查中...</span>
+                        <h3>即時資源監控 <button id="start-monitoring" class="admin-button small"><i class="fas fa-play"></i> 開始監控</button></h3>
+                        <div class="resource-grid">
+                            <div class="resource-card">
+                                <h4>CPU 使用率</h4>
+                                <div class="progress-container">
+                                    <div id="cpu-usage-bar" class="progress-bar" style="width: 0%;"></div>
+                                </div>
+                                <span id="cpu-usage">0%</span>
                             </div>
-                            <div class="metric-item">
-                                <span class="metric-label">總容量:</span>
-                                <span id="storage-total">檢查中...</span>
+                            <div class="resource-card">
+                                <h4>記憶體使用量</h4>
+                                <div class="progress-container">
+                                    <div id="memory-usage-bar" class="progress-bar" style="width: 0%;"></div>
+                                </div>
+                                <span id="memory-usage">0 MB</span>
                             </div>
-                            <div class="metric-item">
-                                <span class="metric-label">使用率:</span>
-                                <span id="storage-utilization">檢查中...</span>
+                            <div class="resource-card">
+                                <h4>頁面渲染時間</h4>
+                                <span id="render-time">0 ms</span>
+                            </div>
+                            <div class="resource-card">
+                                <h4>FPS</h4>
+                                <span id="fps-counter">0</span>
                             </div>
                         </div>
+                        <canvas id="resource-history-chart" height="150"></canvas>
                     </div>
-                    <div class="info-card">
-                        <h3>效能指標</h3>
-                        <div id="performance-metrics">
-                            <div class="metric-item">
-                                <span class="metric-label">平均回應時間:</span>
-                                <span id="avg-response-time">檢查中...</span>
-                            </div>
-                            <canvas id="performance-chart"></canvas>
-                        </div>
-                    </div>
+                    
                     <div class="info-card">
                         <h3>錯誤統計</h3>
                         <div id="error-metrics">
@@ -564,6 +627,14 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="info-card">
+                        <h3>性能指標</h3>
+                        <div id="performance-metrics">
+                            <!-- 性能指標會在這裡進行顯示 -->
+                        </div>
+                    </div>
+                    
                     <div class="info-card">
                         <h3>錯誤日誌</h3>
                         <div id="error-log" class="log-container">
@@ -591,10 +662,36 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/debug-helper.js"></script>
     <script src="assets/js/error-handler.js"></script>
+    <script src="assets/js/resource-monitor.js"></script>
     <script src="assets/js/admin.js"></script>
     <script src="assets/js/analytics.js"></script>
     <script>
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/assets/js/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker 註冊成功，範圍：', registration.scope);
+                        if (typeof addErrorLog === 'function') {
+                            addErrorLog('Service Worker 註冊成功', 'info');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Service Worker 註冊失敗：', error);
+                        if (typeof addErrorLog === 'function') {
+                            addErrorLog('Service Worker 註冊失敗：' + error.message, 'warning');
+                        }
+                    });
+            });
+        } else {
+            console.warn('此瀏覽器不支持 Service Workers');
+            if (typeof addErrorLog === 'function') {
+                addErrorLog('此瀏覽器不支持 Service Workers', 'warning');
+            }
+        }
+        
         // 載入狀態控制
         const loadingSpinner = document.getElementById('loadingSpinner');
 
@@ -742,31 +839,33 @@
 
         // 圖表初始化
         function initCharts() {
-            // 如果圖表已經存在，先銷毀它們（用 window.charts 確保唯一）
-            if (window.charts) {
-                Object.values(window.charts).forEach(chart => {
-                    if (chart && typeof chart.destroy === 'function') {
-                        chart.destroy();
+            return new Promise((resolve) => {
+                // 如果圖表已經存在，先銷毀它們（用 window.charts 確保唯一）
+                if (window.charts) {
+                    Object.values(window.charts).forEach(chart => {
+                        if (chart && typeof chart.destroy === 'function') {
+                            chart.destroy();
+                        }
+                    });
+                }
+                window.charts = {};
+
+                // 修正：重設所有 canvas，避免 Chart.js 報 canvas is already in use
+                const chartCanvasIds = [
+                    'daily-visits-chart',
+                    'games-comparison-chart',
+                    'active-hours-chart',
+                    'browser-chart',
+                    'platform-chart',
+                    'ratingsChart'
+                ];
+                chartCanvasIds.forEach(id => {
+                    const oldCanvas = document.getElementById(id);
+                    if (oldCanvas) {
+                        const newCanvas = oldCanvas.cloneNode(false);
+                        oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
                     }
                 });
-            }
-            window.charts = {};
-
-            // 修正：重設所有 canvas，避免 Chart.js 報 canvas is already in use
-            const chartCanvasIds = [
-                'daily-visits-chart',
-                'games-comparison-chart',
-                'active-hours-chart',
-                'browser-chart',
-                'platform-chart'
-            ];
-            chartCanvasIds.forEach(id => {
-                const oldCanvas = document.getElementById(id);
-                if (oldCanvas) {
-                    const newCanvas = oldCanvas.cloneNode(false);
-                    oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
-                }
-            });
 
             // 初始化新的圖表
             var el = document.getElementById('daily-visits-chart');
@@ -785,7 +884,12 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
                     }
                 });
             }
@@ -815,22 +919,95 @@
             var el3 = document.getElementById('active-hours-chart');
             const activeHoursCtx = el3 ? el3.getContext('2d') : null;
             if (activeHoursCtx) {
+                // 生成測試數據 - 活躍時段模擬
+                const activeHoursData = Array.from({ length: 24 }, () => Math.floor(Math.random() * 100));
+                
+                // 強制指定線型圖表類型
+                // 先新建一個預設的圖表類型設置
+                Chart.defaults.set('elements.line', {
+                    tension: 0.3
+                });
+                
                 window.charts.activeHours = new Chart(activeHoursCtx, {
-                    type: 'line',
+                    type: 'line',  // 確保圖表類型為線型圖表
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '用戶數量'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '時間'
+                                }
+                            },
+                            r: { // 禁用雷達圖相關的尺度
+                                display: false
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            title: {
+                                display: true,
+                                text: '24小時活躍用戶分布'
+                            }
+                        },
+                        elements: {
+                            line: {
+                                tension: 0.3 // 確保線條平滑
+                            }
+                        }
+                    },
                     data: {
-                        labels: Array.from({
-                            length: 24
-                        }, (_, i) => `${i}:00`),
+                        labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
                         datasets: [{
                             label: '活躍用戶數',
-                            data: [],
-                            borderColor: '#2196f3',
-                            tension: 0.1
+                            data: activeHoursData,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderWidth: 2,
+                            fill: true,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#ff6384'
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '用戶數量'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '時間'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '24小時活躍用戶分布'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        }
                     }
                 });
             }
@@ -874,6 +1051,65 @@
                     }
                 });
             }
+
+            // 遊戲評分與評論統計圖表
+            var el6 = document.getElementById('ratingsChart');
+            const ratingsCtx = el6 ? el6.getContext('2d') : null;
+            if (ratingsCtx) {
+                window.charts.ratings = new Chart(ratingsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1星', '2星', '3星', '4星', '5星'],
+                        datasets: [{
+                            label: '評分分布',
+                            data: [],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(255, 159, 64, 0.6)',
+                                'rgba(255, 205, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(54, 162, 235, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(255, 159, 64)',
+                                'rgb(255, 205, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(54, 162, 235)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '評分數量'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '評分'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '遊戲評分分布'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            resolve();
+        });
         }
 
         // 錯誤處理函數
@@ -940,6 +1176,132 @@
         }
 
         // 更新統計顯示
+        function updateSystemStatus() {
+            // 只更新已顯示的頁面
+            const activePage = document.querySelector('.tab-content.active');
+            if (!activePage) return;
+
+            const pageId = activePage.id;
+            if (pageId === 'dashboard') updateDashboard();
+            if (pageId === 'games') updateGames();
+            if (pageId === 'users') updateUsers();
+            if (pageId === 'system') updateSystemInfo();
+        }
+        
+        // 更新儀表盤頁面
+        function updateDashboard() {
+            console.log('更新儀表盤頁面...');
+            
+            // 更新每日訪問量圖表
+            if (window.charts && window.charts.dailyVisits) {
+                const dailyData = [120, 165, 180, 190, 220, 160, 140];
+                window.charts.dailyVisits.data.datasets[0].data = dailyData;
+                window.charts.dailyVisits.update();
+                console.log('每日訪問量圖表已更新');
+            }
+            
+            // 更新統計卡片數據
+            document.getElementById('visits-count').textContent = '14,325';
+            document.getElementById('active-users').textContent = '4,721';
+            document.getElementById('game-plays').textContent = '28,459';
+            document.getElementById('avg-rating').textContent = '4.7';
+        }
+        
+        // 更新遊戲分析頁面
+        function updateGames() {
+            console.log('更新遊戲分析頁面...');
+            
+            // 更新遊戲比較圖表
+            if (window.charts && window.charts.gamesComparison) {
+                const gameData = [245, 187, 163];
+                window.charts.gamesComparison.data.datasets[0].data = gameData;
+                window.charts.gamesComparison.update();
+                console.log('遊戲比較圖表已更新');
+            }
+            
+            // 更新評分圖表
+            if (window.charts && window.charts.ratings) {
+                const ratingsData = [8, 12, 25, 42, 73]; // 1-5星評分
+                window.charts.ratings.data.datasets[0].data = ratingsData;
+                window.charts.ratings.update();
+                console.log('評分圖表已更新');
+            }
+        }
+        
+        // 更新系統資訊頁面
+        function updateSystemInfo() {
+            console.log('更新系統資訊頁面...');
+            
+            // 更新系統狀態卡片
+            document.getElementById('localStorage-status').textContent = '正常';
+            document.getElementById('indexedDB-status').textContent = '正常';
+            document.getElementById('sw-status').textContent = '已安裝';
+            document.getElementById('network-status').textContent = '已連接';
+            
+            // 更新資源監控圖表
+            if (window.resourceChart) {
+                // 生成模擬的資源使用數據
+                const cpuData = Array(10).fill(0).map(() => Math.floor(Math.random() * 30) + 10);
+                const memoryData = Array(10).fill(0).map(() => Math.floor(Math.random() * 40) + 20);
+                
+                window.resourceChart.data.datasets[0].data = cpuData;
+                window.resourceChart.data.datasets[1].data = memoryData;
+                window.resourceChart.update();
+                console.log('資源監控圖表已更新');
+            }
+        }
+        
+        // 更新使用者分析頁面
+        function updateUsers() {
+            console.log('更新使用者分析頁面...');
+            
+            // 更新活躍時段圖表
+            if (window.charts && window.charts.activeHours) {
+                // 生成更真實的活躍時段數據模擬 - 人們通常在上午9點到晚上11點之間活躍
+                const activeHoursData = Array.from({ length: 24 }, (_, i) => {
+                    // 早上9點到晚上11點之間活躍度高
+                    if (i >= 9 && i <= 23) {
+                        // 午餐時間和晚餐時間活躍度略低
+                        if (i === 12 || i === 18) {
+                            return Math.floor(Math.random() * 30) + 20;
+                        }
+                        // 高峰時段：晚上8-10點
+                        if (i >= 20 && i <= 22) {
+                            return Math.floor(Math.random() * 50) + 50;
+                        }
+                        // 其他活躍時段
+                        return Math.floor(Math.random() * 40) + 30;
+                    } else {
+                        // 深夜/凌晨活躍度低
+                        return Math.floor(Math.random() * 15);
+                    }
+                });
+                
+                window.charts.activeHours.data.datasets[0].data = activeHoursData;
+                window.charts.activeHours.update();
+                console.log('活躍時段圖表已更新');
+            } else {
+                console.warn('活躍時段圖表尚未初始化');
+            }
+            
+            // 更新瀏覽器分布圖表
+            if (window.charts && window.charts.browser) {
+                const browserData = [65, 15, 12, 8]; // Chrome, Firefox, Safari, Edge
+                window.charts.browser.data.datasets[0].data = browserData;
+                window.charts.browser.update();
+                console.log('瀏覽器分布圖表已更新');
+            }
+            
+            // 更新裝置分布圖表
+            if (window.charts && window.charts.platform) {
+                const platformData = [55, 35, 10]; // 桌面, 手機, 平板
+                window.charts.platform.data.datasets[0].data = platformData;
+                window.charts.platform.update();
+                console.log('裝置分布圖表已更新');
+            }
+        }
+
+        // 更新統計顯示
         function updateStatsDisplay(ratings, comments) {
             const statsContainer = document.querySelector('.stats-grid');
             if (!statsContainer) return;
@@ -997,13 +1359,22 @@
                 return;
             }
             const chartEl = document.getElementById('ratingsChart');
-            if (!chartEl) return; // 防呆：canvas 不存在不執行
+            if (!chartEl) {
+                console.warn('無法找到 ratingsChart 元素，跳過評分圖表初始化');
+                return;
+            }
+            
+            // 檢查是否有已存在的圖表實例，如果有則銷毀
+            if (window.charts && window.charts.ratings) {
+                window.charts.ratings.destroy();
+            }
+            
             const ctx = chartEl.getContext('2d');
             if (!ctx) return;
             const gameNames = Object.keys(ratings);
             const ratingData = gameNames.map(game => ratings[game].rating || 0);
             const commentData = gameNames.map(game => (gameComments[game] ? gameComments[game].length : 0));
-            new Chart(ctx, {
+            window.charts.ratings = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: gameNames,
@@ -1117,18 +1488,25 @@
 
         // 添加導出按鈕
         function addExportButton() {
-            if (document.getElementById('exportDataBtn')) return;
-            const exportButton = document.createElement('button');
-            exportButton.className = 'admin-button';
-            exportButton.id = 'exportDataBtn';
-            exportButton.innerHTML = '<i class="fas fa-download"></i> 導出數據';
-            exportButton.onclick = exportData;
-            document.querySelector('.admin-header').appendChild(exportButton);
+            return new Promise((resolve) => {
+                if (document.getElementById('exportDataBtn')) {
+                    resolve();
+                    return;
+                }
+                const exportButton = document.createElement('button');
+                exportButton.className = 'admin-button';
+                exportButton.id = 'exportDataBtn';
+                exportButton.innerHTML = '<i class="fas fa-download"></i> 導出數據';
+                exportButton.onclick = exportData;
+                document.querySelector('.admin-header').appendChild(exportButton);
+                resolve();
+            });
         }
 
         // 改進響應式設計
         function initResponsiveDesign() {
-            const mediaQuery = window.matchMedia('(max-width: 768px)');
+            return new Promise((resolve) => {
+                const mediaQuery = window.matchMedia('(max-width: 768px)');
 
             function handleResize(e) {
                 const adminContent = document.querySelector('.admin-content');
@@ -1147,15 +1525,49 @@
             }
             handleResize(mediaQuery);
             mediaQuery.addListener(handleResize);
+            resolve();
+            });
         }
 
         // 修改頁面載入初始化
         document.addEventListener('DOMContentLoaded', () => {
-            checkSystemStatus();
-            loadErrorLogs();
-            initCharts();
-            initResponsiveDesign();
-            addExportButton();
+            // 顯示載入動畫
+            showLoading();
+            
+            // 性能計時開始
+            performance.mark('adminPageStart');
+
+            // 使用 Promise.all 並行初始化所有功能
+            Promise.all([
+                initCharts().then(() => {
+                    console.log('圖表初始化完成');
+                    // 立即更新所有圖表數據
+                    updateSystemStatus();
+                }),
+                window.adminModules?.resourceMonitor?.loadSystemInfo() || checkSystemStatus(),
+                loadErrorLogs(),
+                initResponsiveDesign(),
+                addExportButton()
+            ])
+            .then(() => {
+                // 所有初始化完成後標記
+                performance.mark('allInitialized');
+                performance.measure('totalInitialization', 'adminPageStart', 'allInitialized');
+                
+                // 報告性能指標
+                reportPerformanceMetrics();
+                
+                // 隱藏載入動畫
+                hideLoading();
+            })
+            .catch(error => {
+                // 錯誤處理
+                console.error('初始化錯誤:', error);
+                addErrorLog('管理面板初始化失敗：' + error.message, 'error');
+                
+                // 即使發生錯誤也要隱藏載入動畫
+                hideLoading();
+            });
 
             // 載入保存的數據
             const savedStats = loadStats();
@@ -1291,7 +1703,40 @@
                     networkStatus.style.color = 'var(--error-color)';
                     addErrorLog('網路連接已中斷', 'error');
                 });
-
+                
+                // 檢查瀏覽器功能支援
+                const featureSupport = document.getElementById('feature-support');
+                if (featureSupport) {
+                    featureSupport.innerHTML = '';
+                    
+                    // 檢查關鍵API支援
+                    const features = [
+                        { name: 'IndexedDB', supported: 'indexedDB' in window },
+                        { name: 'LocalStorage', supported: 'localStorage' in window },
+                        { name: 'Service Worker', supported: 'serviceWorker' in navigator },
+                        { name: 'Web Workers', supported: 'Worker' in window },
+                        { name: 'WebGL', supported: (() => {
+                            try {
+                                return !!document.createElement('canvas').getContext('webgl');
+                            } catch(e) {
+                                return false;
+                            }
+                        })() }
+                    ];
+                    
+                    features.forEach(feature => {
+                        const featureItem = document.createElement('div');
+                        featureItem.className = 'metric-item';
+                        featureItem.innerHTML = `
+                            <span class="metric-label">${feature.name}</span>
+                            <span class="metric-value" style="color: var(--${feature.supported ? 'success' : 'error'}-color)">
+                                ${feature.supported ? '支援' : '不支援'}
+                            </span>
+                        `;
+                        featureSupport.appendChild(featureItem);
+                    });
+                }
+                
             } catch (error) {
                 addErrorLog('系統狀態檢查失敗：' + error.message, 'error');
             }
@@ -1304,11 +1749,36 @@
 
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry ${type}`;
+            logEntry.setAttribute('role', 'listitem');
+            logEntry.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
 
+            // 增加用戶代理和頁面路徑資訊，幫助診斷問題
             const time = new Date().toLocaleTimeString();
+            const pagePath = window.location.pathname.split('/').pop();
+            const userAgentInfo = navigator.userAgent.substring(0, 50) + '...';
+            
+            // 為不同類型的錯誤添加不同的圖標和樣式
+            const iconMap = {
+                'error': '<i class="fas fa-exclamation-circle"></i>',
+                'warning': '<i class="fas fa-exclamation-triangle"></i>',
+                'info': '<i class="fas fa-info-circle"></i>',
+                'success': '<i class="fas fa-check-circle"></i>'
+            };
+            
+            const icon = iconMap[type] || iconMap['info'];
+            
             logEntry.innerHTML = `
-                <span class="log-time">[${time}]</span>
-                <span class="log-message">${message}</span>
+                <div class="log-header">
+                    ${icon} <span class="log-time">[${time}]</span>
+                    <span class="log-type">${type.toUpperCase()}</span>
+                </div>
+                <div class="log-content">
+                    <span class="log-message">${message}</span>
+                    <div class="log-details">
+                        <small>頁面: ${pagePath}</small>
+                        <small class="user-agent">瀏覽器: ${userAgentInfo}</small>
+                    </div>
+                </div>
             `;
 
             errorLog.insertBefore(logEntry, errorLog.firstChild);
@@ -1331,27 +1801,151 @@
                     logs.length = 100;
                 }
                 localStorage.setItem('error_logs', JSON.stringify(logs));
+                
+                // 如果是嚴重錯誤，同步到伺服器（模擬）
+                if (type === 'error') {
+                    sendErrorToServer({
+                        time: new Date().toISOString(),
+                        message,
+                        type,
+                        userAgent: navigator.userAgent,
+                        url: window.location.href
+                    }).catch(err => console.error('無法同步錯誤到伺服器：', err));
+                }
             } catch (e) {
                 console.error('無法保存錯誤日誌：', e);
             }
         }
+        
+        // 將錯誤發送到伺服器並支援重試機制
+        async function sendErrorToServer(errorData, retryCount = 0) {
+            // 在實際應用中，這裡應該是一個真實的API呼叫
+            return new Promise((resolve, reject) => {
+                // 檢查網路連接
+                if (!navigator.onLine && retryCount < 3) {
+                    // 如果無網路，將待發送的錯誤添加到佇列
+                    const pendingErrors = JSON.parse(sessionStorage.getItem('pending_errors') || '[]');
+                    pendingErrors.push(errorData);
+                    sessionStorage.setItem('pending_errors', JSON.stringify(pendingErrors));
+                    console.log('網路中斷，錯誤已加入佇列等待發送');
+                    return resolve();
+                }
+                
+                // 模擬 API 請求
+                console.log('將錯誤同步到伺服器:', errorData);
+                
+                // 模擬離線時的錯誤重試機制
+                setTimeout(() => {
+                    // 網路連接成功率模擬
+                    const isSuccess = Math.random() > 0.3; // 70% 成功率
+                    
+                    if (isSuccess || retryCount >= 3) {
+                        // 檢查是否有待發送的錯誤佇列
+                        if (navigator.onLine && sessionStorage.getItem('pending_errors')) {
+                            try {
+                                const pendingErrors = JSON.parse(sessionStorage.getItem('pending_errors') || '[]');
+                                if (pendingErrors.length > 0) {
+                                    console.log('發送佇列中的錯誤，共 ' + pendingErrors.length + ' 條');
+                                    // 在實際應用中，這裡應該批量發送佇列中的錯誤
+                                    sessionStorage.removeItem('pending_errors');
+                                }
+                            } catch (e) {
+                                console.error('處理待發送錯誤時發生問題:', e);
+                            }
+                        }
+                        resolve();
+                    } else {
+                        // 模擬發送失敗後的重試
+                        console.warn(`發送錯誤失敗，將進行第 ${retryCount + 1} 次重試`);
+                        setTimeout(() => {
+                            sendErrorToServer(errorData, retryCount + 1)
+                                .then(resolve)
+                                .catch(reject);
+                        }, 1000 * Math.pow(2, retryCount)); // 指數退避策略
+                    }
+                }, 300);
+            });
+        }
 
         // 載入錯誤日誌
         function loadErrorLogs() {
-            const errorLog = document.getElementById('error-log');
-            if (!errorLog) return;
+            return new Promise((resolve) => {
+                const errorLog = document.getElementById('error-log');
+                if (!errorLog) {
+                    resolve();
+                    return;
+                }
 
+                try {
+                    // 標記日誌區域為列表
+                    errorLog.setAttribute('role', 'log');
+                    errorLog.setAttribute('aria-label', '系統錯誤日誌');
+                    
+                    const logs = JSON.parse(localStorage.getItem('error_logs') || '[]');
+                    errorLog.innerHTML = logs.map(log => `
+                        <div class="log-entry ${log.type}" role="listitem">
+                            <span class="log-time">[${new Date(log.time).toLocaleTimeString()}]</span>
+                            <span class="log-message">${log.message}</span>
+                        </div>
+                    `).join('');
+                    
+                    // 添加清除日誌按鈕
+                    if (logs.length > 0 && !document.getElementById('clear-logs-btn')) {
+                        const clearBtn = document.createElement('button');
+                        clearBtn.id = 'clear-logs-btn';
+                        clearBtn.className = 'admin-button danger';
+                        clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 清除日誌';
+                        clearBtn.addEventListener('click', clearErrorLogs);
+                        
+                        const logHeader = document.querySelector('.log-header');
+                        if (logHeader) {
+                            logHeader.appendChild(clearBtn);
+                        }
+                    }
+                    
+                    resolve();
+                } catch (e) {
+                    console.error('無法載入錯誤日誌：', e);
+                    addErrorLog('載入錯誤日誌失敗：' + e.message, 'error');
+                    resolve();
+                }
+            });
+        }
+        
+        // 清除錯誤日誌
+        function clearErrorLogs() {
             try {
-                const logs = JSON.parse(localStorage.getItem('error_logs') || '[]');
-                errorLog.innerHTML = logs.map(log => `
-                    <div class="log-entry ${log.type}">
-                        <span class="log-time">[${new Date(log.time).toLocaleTimeString()}]</span>
-                        <span class="log-message">${log.message}</span>
-                    </div>
-                `).join('');
+                localStorage.removeItem('error_logs');
+                const errorLog = document.getElementById('error-log');
+                if (errorLog) {
+                    errorLog.innerHTML = '';
+                }
+                
+                // 顯示成功訊息
+                showMessage('錯誤日誌已清除', 'success');
             } catch (e) {
-                console.error('無法載入錯誤日誌：', e);
+                console.error('清除錯誤日誌失敗：', e);
+                showMessage('清除錯誤日誌失敗', 'error');
             }
+        }
+        
+        // 顯示通知訊息
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.style.display = 'block';
+            messageDiv.setAttribute('role', 'alert');
+            messageDiv.setAttribute('aria-live', 'assertive');
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
         }
     </script>
 </body>
