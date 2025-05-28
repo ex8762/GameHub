@@ -15,229 +15,64 @@
     <link rel="stylesheet" href="assets/css/rating-fix.css">
     <link rel="stylesheet" href="assets/css/simple-rating.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="assets/images/icons/icon-192x192.png">
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <!-- 避免在本地文件系統環境載入 manifest.json 及圖示 -->
+    <!-- <link rel="manifest" href="manifest.json"> -->
     <!-- 優先載入兼容性修復腳本 -->
     <script src="assets/js/browser-compatibility-fix.js"></script>
-    <!-- Direct inline rating functionality script with complete replacement -->
+    <!-- 簡易星星評分系統 -->
+    <script src="assets/js/simple-star-rating.js"></script>
+    <!-- Service Worker 註冊腳本 -->
     <script>
-    // Function to initialize on page load
+    // 只保留 Service Worker 註冊相關程式碼，避免與 simple-star-rating.js 衝突
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Starting completely rebuilt rating system');
+        // 當前只可能在 HTTP/HTTPS 協議下註冊 Service Worker
+        if (window.location.protocol === 'file:') {
+            console.log('本地文件系統環境不支援 Service Worker，跳過註冊');
+            return; // 直接跳過所有 ServiceWorker 相關代碼
+        }
         
-        // Find all rating containers
-        const starContainers = document.querySelectorAll('.stars-input');
-        console.log(`Found ${starContainers.length} star containers`);
-        
-        // Process each container
-        starContainers.forEach(function(container) {
-            // Save the container's parent
-            const parent = container.parentNode;
-            const form = container.closest('form');
-            
-            // Create a new container
-            const newContainer = document.createElement('div');
-            newContainer.className = 'rating-buttons-container';
-            newContainer.style.display = 'flex';
-            newContainer.style.gap = '10px';
-            newContainer.style.alignItems = 'center';
-            newContainer.style.marginTop = '10px';
-            newContainer.style.marginBottom = '10px';
-            
-            // Create a text label
-            const label = document.createElement('span');
-            label.textContent = '評分：';
-            label.style.marginRight = '10px';
-            newContainer.appendChild(label);
-            
-            // Create a hidden input for the rating
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'direct_rating';
-            hiddenInput.value = '';
-            if (form) {
-                form.appendChild(hiddenInput);
-            }
-            
-            // Create 5 star buttons
-            for (let i = 1; i <= 5; i++) {
-                const starButton = document.createElement('button');
-                starButton.type = 'button'; // Important: not submit
-                starButton.setAttribute('data-rating', i);
-                starButton.className = 'star-button';
-                starButton.innerHTML = '<i class="far fa-star"></i>';
-                
-                // Style the button
-                starButton.style.background = 'transparent';
-                starButton.style.border = 'none';
-                starButton.style.color = '#ddd';
-                starButton.style.fontSize = '24px';
-                starButton.style.cursor = 'pointer';
-                starButton.style.padding = '8px';
-                starButton.style.margin = '0';
-                starButton.style.outline = 'none';
-                
-                // Add click event
-                starButton.addEventListener('click', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    console.log(`Star button ${rating} clicked`);
-                    
-                    // Update all buttons
-                    const buttons = newContainer.querySelectorAll('.star-button');
-                    buttons.forEach(function(btn) {
-                        const btnRating = parseInt(btn.getAttribute('data-rating'));
-                        const icon = btn.querySelector('i');
-                        
-                        if (btnRating <= rating) {
-                            icon.className = 'fas fa-star';
-                            btn.style.color = '#FFC107';
-                        } else {
-                            icon.className = 'far fa-star';
-                            btn.style.color = '#ddd';
-                        }
-                    });
-                    
-                    // Store the rating
-                    hiddenInput.value = rating;
-                    console.log(`Set rating: ${rating}`);
-                });
-                
-                // Add hover effects
-                starButton.addEventListener('mouseover', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    
-                    // Highlight this and previous stars
-                    const buttons = newContainer.querySelectorAll('.star-button');
-                    buttons.forEach(function(btn) {
-                        const btnRating = parseInt(btn.getAttribute('data-rating'));
-                        const icon = btn.querySelector('i');
-                        
-                        if (btnRating <= rating) {
-                            icon.className = 'fas fa-star';
-                            btn.style.color = '#FFC107';
-                        }
-                    });
-                });
-                
-                // Add mouseleave to revert to selected state
-                newContainer.addEventListener('mouseleave', function() {
-                    const selectedRating = parseInt(hiddenInput.value) || 0;
-                    
-                    // Reset to selected state
-                    const buttons = newContainer.querySelectorAll('.star-button');
-                    buttons.forEach(function(btn) {
-                        const btnRating = parseInt(btn.getAttribute('data-rating'));
-                        const icon = btn.querySelector('i');
-                        
-                        if (btnRating <= selectedRating) {
-                            icon.className = 'fas fa-star';
-                            btn.style.color = '#FFC107';
-                        } else {
-                            icon.className = 'far fa-star';
-                            btn.style.color = '#ddd';
-                        }
-                    });
-                });
-                
-                newContainer.appendChild(starButton);
-            }
-            
-            // Replace the original container with our new one
-            parent.replaceChild(newContainer, container);
-            console.log('Replaced star container with button-based implementation');
-        });
-        
-        // Fix form submission to use our rating
-        document.querySelectorAll('.comment-form').forEach(function(form) {
-            // Replace existing event handler to avoid conflicts
-            const newForm = form.cloneNode(true);
-            if (form.parentNode) {
-                form.parentNode.replaceChild(newForm, form);
-            }
-            
-            // Add our direct submit handler
-            newForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                console.log('Form submission handler triggered');
-                
-                // Get the direct rating from our hidden field
-                const hiddenRating = this.querySelector('input[name="direct_rating"]');
-                if (!hiddenRating || !hiddenRating.value) {
-                    alert('請選擇 1-5 星的評分');
-                    console.log('Rating missing, stopping submission');
-                    return false;
+        // 只在 HTTP/HTTPS 協議下執行
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+            // 延遲註冊，確保軟體按次序初始化
+            setTimeout(() => {
+                try {
+                    // 使用 try-catch 包裝整個註冊過程
+                    navigator.serviceWorker.register('./assets/js/service-worker.js')
+                        .then(registration => {
+                            console.log('Service Worker 註冊成功，範圍：', registration.scope);
+                            
+                            // 添加更新檢查
+                            registration.addEventListener('updatefound', () => {
+                                const newWorker = registration.installing;
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // 顯示通知，提示有新版本可用
+                                        const notification = document.createElement('div');
+                                        notification.className = 'update-notification';
+                                        notification.innerHTML = `
+                                            <p>有新版本可用！</p>
+                                            <button id="refreshApp">立即更新</button>
+                                        `;
+                                        document.body.appendChild(notification);
+                                        
+                                        document.getElementById('refreshApp').addEventListener('click', () => {
+                                            window.location.reload();
+                                        });
+                                    }
+                                });
+                            });
+                        })
+                        .catch(err => {
+                            // 從錯誤中恢復，不中斷網站正常運作
+                            console.warn('ServiceWorker 註冊失敗，但網站仍然可正常運作:', err);
+                        });
+                } catch (err) {
+                    console.warn('ServiceWorker 註冊錯誤，已安全處理:', err);
                 }
-                
-                const rating = parseInt(hiddenRating.value);
-                console.log(`Submitting with rating: ${rating}`);
-                
-                const gameId = this.dataset.game;
-                const username = this.querySelector('[name="username"]').value;
-                const comment = this.querySelector('[name="comment"]').value;
-                
-                // Create comment data
-                const commentData = {
-                    username: username,
-                    content: comment,
-                    rating: rating,
-                    date: new Date().toLocaleDateString()
-                };
-                
-                console.log('Comment data:', commentData);
-                
-                // Save comment using the original function if available
-                if (typeof saveComment === 'function') {
-                    saveComment(gameId, commentData);
-                }
-                
-                // Update game rating
-                if (typeof updateGameRating === 'function') {
-                    updateGameRating(gameId, rating);
-                }
-                
-                // Add comment to the page
-                const commentsList = document.getElementById(`${gameId}-comments`);
-                if (commentsList) {
-                    const commentElement = document.createElement('div');
-                    commentElement.className = 'comment';
-                    commentElement.innerHTML = `
-                        <div class="comment-header">
-                            <span class="comment-username">${username}</span>
-                            <span class="comment-date">${commentData.date}</span>
-                        </div>
-                        <div class="comment-content">${comment}</div>
-                        <div class="comment-rating">
-                            ${Array(5).fill().map((_, i) => 
-                                `<i class="${i < rating ? 'fas' : 'far'} fa-star"></i>`
-                            ).join('')}
-                        </div>
-                    `;
-                    commentsList.appendChild(commentElement);
-                }
-                
-                // Reset the form
-                this.reset();
-                
-                // Reset the stars by clearing the hidden input
-                if (hiddenRating) {
-                    hiddenRating.value = '';
-                }
-                
-                // Find and reset any new rating containers
-                const ratingContainer = document.querySelector('.rating-buttons-container');
-                if (ratingContainer) {
-                    const buttons = ratingContainer.querySelectorAll('.star-button');
-                    buttons.forEach(function(btn) {
-                        const icon = btn.querySelector('i');
-                        icon.className = 'far fa-star';
-                        btn.style.color = '#ddd';
-                    });
-                }
-                
-                return false;
-            });
-        });
+            }, 1000); // 延遲 1 秒註冊，避免與其他初始化衝突
+        } else {
+            console.log('當前環境不支援 Service Worker，跳過註冊');
+        }
     });
     </script>
     <style>
@@ -453,8 +288,7 @@
             <div class="logo-container">
                 <h1><i class="fas fa-gamepad"></i> 遊戲天地</h1>
             </div>
-            <ul id="navMenu" role="menu">
-            <ul class="nav-links">
+            <ul id="navMenu" class="nav-links" role="menu">
                 <li><a href="#shooting-game"><i class="fas fa-crosshairs"></i> 射擊遊戲</a></li>
                 <li><a href="#simulation-game"><i class="fas fa-city"></i> 模擬經營</a></li>
                 <li><a href="#cafe-game"><i class="fas fa-coffee"></i> 咖啡廳</a></li>
@@ -576,21 +410,8 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="simple-rating">
-                                <input type="radio" id="star5-${formId}" name="rating" value="5">
-                                <label for="star5-${formId}"></label>
-                                
-                                <input type="radio" id="star4-${formId}" name="rating" value="4">
-                                <label for="star4-${formId}"></label>
-                                
-                                <input type="radio" id="star3-${formId}" name="rating" value="3">
-                                <label for="star3-${formId}"></label>
-                                
-                                <input type="radio" id="star2-${formId}" name="rating" value="2">
-                                <label for="star2-${formId}"></label>
-                                
-                                <input type="radio" id="star1-${formId}" name="rating" value="1">
-                                <label for="star1-${formId}"></label>
+                            <div class="stars-input">
+                                <!-- 星星評分將由 simple-star-rating.js 生成 -->
                             </div>
                         </div>
                     </div>
@@ -659,21 +480,8 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="simple-rating">
-                                <input type="radio" id="star5-${formId}" name="rating" value="5">
-                                <label for="star5-${formId}"></label>
-                                
-                                <input type="radio" id="star4-${formId}" name="rating" value="4">
-                                <label for="star4-${formId}"></label>
-                                
-                                <input type="radio" id="star3-${formId}" name="rating" value="3">
-                                <label for="star3-${formId}"></label>
-                                
-                                <input type="radio" id="star2-${formId}" name="rating" value="2">
-                                <label for="star2-${formId}"></label>
-                                
-                                <input type="radio" id="star1-${formId}" name="rating" value="1">
-                                <label for="star1-${formId}"></label>
+                            <div class="stars-input">
+                                <!-- 星星評分將由 simple-star-rating.js 生成 -->
                             </div>
                         </div>
                     </div>
@@ -1269,16 +1077,28 @@
             });
         });
 
+        // 避免重複監聽DOMContentLoaded事件
         // 頁面載入時載入保存的數據
-        document.addEventListener('DOMContentLoaded', () => {
+        const loadSavedData = () => {
+            console.log('Loading saved ratings and comments');
             // 如果 rating-system.js 已經加載，則使用其中的函數
             if (window.ratingSystem) {
                 window.ratingSystem.loadGameRatings();
-            } else {
+            } else if (typeof loadGameRatings === 'function') {
                 loadGameRatings();
             }
-            loadComments();
-        });
+            
+            if (typeof loadComments === 'function') {
+                loadComments();
+            }
+        };
+        
+        // 確保只執行一次
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadSavedData);
+        } else {
+            loadSavedData();
+        }
 
         // 使用一個簡潔的評分系統解決方案
         // 已在 HTML 頭部引入 clean-rating-fix.js
@@ -1314,12 +1134,26 @@
                     console.error('ServiceWorker registration failed: ', err);
                     
                     // 錯誤處理 - 添加到錯誤日誌系統
-                    if (window.ErrorHandler) {
-                        window.ErrorHandler.handle(err, {
-                            component: 'ServiceWorker',
-                            severity: 'warning',
-                            notifyUser: false
-                        });
+                    if (window.ErrorHandler && typeof window.ErrorHandler.handle === 'function') {
+                        try {
+                            window.ErrorHandler.handle(err, {
+                                component: 'ServiceWorker',
+                                severity: 'warning',
+                                notifyUser: false
+                            });
+                        } catch (handleErr) {
+                            console.warn('錯誤處理時發生了其他錯誤:', handleErr);
+                            // 備用方法：如果 handle 失敗，嘗試使用 logError
+                            if (typeof window.ErrorHandler.logError === 'function') {
+                                try {
+                                    window.ErrorHandler.logError({
+                                        message: err.message || String(err),
+                                        level: 2, // WARNING
+                                        error: err
+                                    });
+                                } catch (e) {}
+                            }
+                        }
                     }
                 }
             });

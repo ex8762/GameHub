@@ -223,6 +223,21 @@ DOMContentLoaded
 ### 6.4 本地開發環境問題 (Local Development Environment Issues)
 **問題:** 本地環境中某些功能可能導致錯誤  
 **解決方案:**
-- 環境檢測 (localhost, 127.0.0.1)
+- 環境檢測 (localhost, 127.0.0.1, file:// 協議)
 - 針對本地環境禁用特定功能
 - 提供本地測試用模擬資料
+- 特別處理 file:// 協議的 API 限制 (ServiceWorker, 存儲 API)
+
+### 6.5 星星評分系統問題 (Star Rating System Issues)
+**問題:** 星星評分無法點擊和提交  
+**解決方案:**
+- 修正 HTML 結構中的 name 屬性 (name="direct_rating" 而非 name="rating")
+- 確保評分容器使用正確的 CSS 選擇器 (.stars-input)
+- 改進表單提交處理邏輯，確保評分值正確傳遢
+
+### 6.6 存儲指標更新問題 (Storage Metrics Update Issues)
+**問題:** 在特定環境下顯示「更新存處指標失敗」警告  
+**解決方案:**
+- 新增通知清除功能 (clearAll 和 removeStorageRelatedNotifications 方法)
+- 在伺服器環境自動清除存儲相關通知
+- 在 file:// 協議環境下提供模擬存儲指標數據
