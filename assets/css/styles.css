@@ -1125,14 +1125,28 @@
                 
                 .stars-input {
                     display: flex;
-                    gap: 0.3rem;
+                    gap: 8px;
+                    padding: 10px 0;
+                    position: relative;
+                    z-index: 100;
                 }
                 
                 .stars-input i {
-                    color: #ddd;
-                    cursor: pointer;
-                    transition: color 0.3s ease;
+                    cursor: pointer !important;
+                    font-size: 1.8rem !important;
+                    color: #ddd !important;
+                    transition: all 0.2s ease;
+                    display: inline-block !important;
+                    margin: 0 2px !important;
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                    z-index: 101 !important;
+                    position: relative !important;
+                    pointer-events: auto !important;
                 }
+                
                 
                 .stars-input i:hover,
                 .stars-input i.active {

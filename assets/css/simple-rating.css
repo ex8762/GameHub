@@ -1,0 +1,90 @@
+/* Simple star rating system using HTML radio buttons */
+.simple-rating {
+    display: flex;
+    flex-direction: row-reverse; /* Reverse order so hovering works properly */
+    justify-content: flex-end;
+    margin: 10px 0;
+}
+
+.simple-rating input[type="radio"] {
+    display: none; /* Hide actual radio buttons */
+}
+
+.simple-rating label {
+    cursor: pointer;
+    font-size: 24px;
+    color: #ddd;
+    margin: 0 2px;
+    transition: color 0.2s ease;
+}
+
+/* These selectors make the hover effect work properly */
+.simple-rating label:hover,
+.simple-rating label:hover ~ label,
+.simple-rating input[type="radio"]:checked ~ label {
+    color: #FFD700;
+}
+
+/* Make sure labels appear as stars */
+.simple-rating label:before {
+    content: "★"; /* Unicode star character */
+    font-family: Arial, sans-serif;
+}
+
+/* Add a small instruction text */
+.rating-instructions {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Style for the rating form elements */
+.form-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #2196F3;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.submit-comment {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.submit-comment:hover {
+    background-color: #0b7dda;
+}
+
+/* Add visual feedback on rating selection */
+.simple-rating input[type="radio"]:checked + label {
+    transform: scale(1.2);
+}

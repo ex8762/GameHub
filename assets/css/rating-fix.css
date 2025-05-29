@@ -1,0 +1,75 @@
+/* Rating system CSS fixes */
+.stars-input {
+    display: flex;
+    gap: 8px;
+    padding: 10px 0;
+    position: relative;
+    z-index: 100;
+}
+
+.stars-input i {
+    cursor: pointer !important;
+    font-size: 1.8rem !important;
+    color: #ddd !important;
+    transition: all 0.2s ease;
+    display: inline-block !important;
+    margin: 0 2px !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    z-index: 101 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+}
+
+.stars-input i.fas,
+.stars-input i.selected {
+    color: #FFC107 !important;
+}
+
+.stars-input i:hover {
+    transform: scale(1.1);
+    color: #FFC107 !important;
+}
+
+/* Make sure stars are clickable */
+.stars-input i {
+    pointer-events: auto !important;
+    user-select: none;
+    touch-action: auto !important;
+}
+
+/* Game rating display */
+.game-rating .stars {
+    display: flex;
+    gap: 3px;
+    margin-right: 8px;
+}
+
+.game-rating .stars i {
+    color: #ddd;
+}
+
+.game-rating .stars i.fas {
+    color: #FFC107;
+}
+
+.rating-score {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* Comment rating display */
+.comment-rating {
+    margin-top: 8px;
+}
+
+.comment-rating i {
+    color: #ddd;
+    font-size: 0.9rem;
+}
+
+.comment-rating i.fas {
+    color: #FFC107;
+}
