@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生存遊戲</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ui-enhancements.css">
+</head>
+<body>
+    <!-- HUD 顯示區域 -->
+    <div id="hud">
+        <div class="status-bars">
+            <div class="status-bar" id="health-bar">
+                <span class="label">生命值</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+            <div class="status-bar" id="hunger-bar">
+                <span class="label">飢餓度</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+            <div class="status-bar" id="thirst-bar">
+                <span class="label">口渴度</span>
+                <div class="bar-bg">
+                    <div class="bar-fill"></div>
+                </div>
+                <span class="value">100/100</span>
+            </div>
+        </div>
+        <div class="game-info">
+            <div id="temperature">溫度: 20°C</div>
+            <div id="survival-time">生存時間: 00:00:00</div>
+        </div>
+    </div>
+
+    <!-- 遊戲主畫面 -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- 日夜指示器 -->
+    <div class="day-night-indicator">
+        <div class="day-night-progress"></div>
+        <div class="day-night-text">00:00</div>
+    </div>
+    
+    <!-- 載入畫面 -->
+    <div id="loading-screen">
+        <div class="loading-container">
+            <h2>正在載入遊戲...</h2>
+            <div id="loading-progress-container">
+                <div id="loading-progress"></div>
+            </div>
+            <div id="loading-text">0%</div>
+        </div>
+    </div>
+    
+    <!-- 遊戲說明 -->
+    <div id="instructions" class="instructions hidden">
+        <h2>遊戲說明</h2>
+        <div class="instruction-grid">
+            <div class="instruction-item">
+                <div class="key">W, A, S, D / 方向鍵</div>
+                <div class="description">移動角色</div>
+            </div>
+            <div class="instruction-item">
+                <div class="key">E</div>
+                <div class="description">收集資源</div>
+            </div>
+            <div class="instruction-item">
+                <div class="key">I</div>
+                <div class="description">開啟/關閉物品欄</div>
+            </div>
+            <div class="instruction-item">
+                <div class="key">C</div>
+                <div class="description">開啟/關閉合成面板</div>
+            </div>
+            <div class="instruction-item">
+                <div class="key">H</div>
+                <div class="description">顯示遊戲說明</div>
+            </div>
+            <div class="instruction-item">
+                <div class="key">ESC</div>
+                <div class="description">關閉所有面板</div>
+            </div>
+        </div>
+        <button class="close-button" id="close-instructions">關閉說明</button>
+    </div>
+    
+    <!-- 物品欄 -->
+    <div id="inventory" class="hidden">
+        <div class="inventory-grid"></div>
+    </div>
+
+    <!-- 合成面板 -->
+    <div id="crafting-panel" class="hidden">
+        <h2>合成面板</h2>
+        <div class="crafting-categories">
+            <button class="category-btn active" data-category="all">全部</button>
+            <button class="category-btn" data-category="tools">工具</button>
+            <button class="category-btn" data-category="weapons">武器</button>
+            <button class="category-btn" data-category="resources">資源</button>
+            <button class="category-btn" data-category="building">建築</button>
+        </div>
+        <div class="crafting-grid"></div>
+        <div class="crafting-info">
+            <div class="crafting-details">
+                <div class="recipe-name">選擇一個配方</div>
+                <div class="recipe-requirements">所需物品：</div>
+            </div>
+            <button id="craft-button" disabled>合成</button>
+        </div>
+    </div>
+
+    <!-- 地圖 -->
+    <div id="map-overlay" class="hidden">
+        <canvas id="map-canvas"></canvas>
+    </div>
+
+    <!-- 設置面板 -->
+    <div id="settings-panel" class="hidden">
+        <h2>設置</h2>
+        <div class="settings-content">
+            <div class="setting-item">
+                <label for="volume-slider">音效音量</label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+            </div>
+            <div class="setting-item">
+                <button id="mute-button" class="settings-button">靜音</button>
+                <button id="help-button" class="settings-button">遊戲說明</button>
+            </div>
+            <div class="setting-actions">
+                <button id="save-game" class="settings-button primary">儲存遊戲</button>
+                <button id="load-game" class="settings-button">載入遊戲</button>
+            </div>
+            <div class="setting-actions">
+                <button id="reset-game" class="settings-button danger">重新開始</button>
+                <button id="close-settings" class="settings-button">關閉</button>
+            </div>
+        </div>
+    </div>    <!-- 通知區 -->
+    <div id="notification-container"></div>
+    
+    <!-- 提示工具 -->
+    <div id="tooltip-container" class="game-tooltip" style="display: none;"></div>
+    
+    <!-- 快速設置鈕 -->
+    <div class="quick-buttons">
+        <button id="settings-button" data-tooltip="設置">⚙️</button>
+        <button id="inventory-button" data-tooltip="物品欄 (I)">🎒</button>
+        <button id="crafting-button" data-tooltip="合成 (C)">⚒️</button>
+        <button id="help-quick-button" data-tooltip="說明 (H)">❓</button>
+    </div>
+    
+    <!-- 載入腳本 -->
+    <script type="module">
+        import { GameEngine } from './js/game-engine.js';
+        
+        // 初始化遊戲引擎
+        window.addEventListener('DOMContentLoaded', () => {
+            // 創建遊戲引擎基類
+            const engine = new GameEngine();
+            
+            // 將引擎存儲到全局變數中，以便其他模塊可以訪問
+            window.gameEngine = engine;
+            
+            // 設置快速按鈕事件
+            document.getElementById('settings-button').addEventListener('click', () => {
+                document.getElementById('settings-panel').classList.toggle('hidden');
+            });
+            
+            document.getElementById('inventory-button').addEventListener('click', () => {
+                engine.toggleInventory();
+            });
+            
+            document.getElementById('crafting-button').addEventListener('click', () => {
+                engine.toggleCrafting();
+            });
+            
+            document.getElementById('help-quick-button').addEventListener('click', () => {
+                document.getElementById('instructions').classList.toggle('hidden');
+            });
+            
+            // 設置關閉說明按鈕
+            document.getElementById('close-instructions').addEventListener('click', () => {
+                document.getElementById('instructions').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

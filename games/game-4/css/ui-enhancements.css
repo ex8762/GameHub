@@ -1,0 +1,340 @@
+/* 遊戲UI增強樣式 */
+
+/* 通知系統 */
+.game-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 250px;
+    max-width: 350px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: slide-in 0.3s ease-out;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-icon {
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.notification-content {
+    flex: 1;
+    font-size: 14px;
+}
+
+.game-notification.success {
+    border-left: 4px solid #2ecc71;
+}
+
+.game-notification.info {
+    border-left: 4px solid #3498db;
+}
+
+.game-notification.warning {
+    border-left: 4px solid #f39c12;
+}
+
+.game-notification.error {
+    border-left: 4px solid #e74c3c;
+}
+
+/* 工具提示 */
+.game-tooltip {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    max-width: 250px;
+    z-index: 1001;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* 浮動文字 */
+.floating-text {
+    position: absolute;
+    z-index: 1000;
+    pointer-events: none;
+    animation: float-up 1.5s ease-out forwards;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+}
+
+/* 物品工具提示 */
+.item-tooltip {
+    padding: 8px;
+    min-width: 180px;
+}
+
+.item-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.item-icon {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.item-name {
+    font-weight: bold;
+    color: #f1c40f;
+}
+
+.item-description {
+    font-size: 12px;
+    color: #bdc3c7;
+    margin-bottom: 8px;
+}
+
+.item-durability {
+    margin-top: 5px;
+}
+
+.durability-label {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-bottom: 2px;
+}
+
+.durability-bar {
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 2px;
+}
+
+.durability-fill {
+    height: 100%;
+    width: 50%;
+    background-color: #2ecc71;
+}
+
+.durability-value {
+    font-size: 10px;
+    color: #bdc3c7;
+    text-align: right;
+}
+
+.item-properties {
+    margin-top: 5px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+}
+
+.item-property {
+    font-size: 11px;
+    color: #3498db;
+}
+
+/* 指令說明面板優化 */
+.instructions {
+    background-color: rgba(0, 0, 0, 0.85);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1002;
+    color: white;
+    transition: opacity 0.5s ease;
+}
+
+.instructions h2 {
+    color: #f1c40f;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.instruction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.instruction-item {
+    background-color: rgba(52, 73, 94, 0.6);
+    border-radius: 5px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+}
+
+.instruction-item:hover {
+    transform: translateY(-3px);
+    background-color: rgba(52, 73, 94, 0.8);
+}
+
+.instruction-item .key {
+    color: #f1c40f;
+    font-weight: bold;
+    margin-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+
+.instruction-item .description {
+    color: #ecf0f1;
+}
+
+.close-button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+    background-color: #27ae60;
+}
+
+/* 物品欄改進 */
+.inventory-slot {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid #34495e;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inventory-slot.selected {
+    border-color: #f1c40f;
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+}
+
+.inventory-slot:hover {
+    background-color: rgba(52, 73, 94, 0.7);
+}
+
+.item-icon {
+    font-size: 24px;
+}
+
+.item-count {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* 載入畫面增強 */
+#loading-screen {
+    background: linear-gradient(135deg, #1a2a3a 0%, #0a0a0a 100%);
+}
+
+#loading-progress {
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+/* 日夜指示器改進 */
+.day-night-indicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 100px;
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.day-night-progress {
+    height: 100%;
+    background: linear-gradient(to right, #f1c40f, #e67e22);
+    border-radius: 10px;
+    transition: width 0.5s linear;
+}
+
+.day-night-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+/* 動畫效果 */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.pulse {
+    animation: pulse 0.5s infinite;
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}

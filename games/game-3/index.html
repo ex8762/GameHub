@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="一個精緻有趣的咖啡廳經營模擬遊戲，打造專屬於你的夢想咖啡廳">
+    <meta name="keywords" content="咖啡廳,模擬經營,遊戲,咖啡,管理">
+    <meta name="theme-color" content="#8b4513">
+    <meta property="og:title" content="咖啡物語：夢想咖啡廳">
+    <meta property="og:description" content="一個精緻有趣的咖啡廳經營模擬遊戲，打造專屬於你的夢想咖啡廳">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="images/cafe-preview.jpg">
+    
+    <title>咖啡物語：夢想咖啡廳</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    
+    <!-- 字體和圖標 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+    
+    <!-- 遊戲樣式 -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="preload" href="images/cafe-background.jpg" as="image">
+    
+    <style>
+        :root {
+            --primary-color: #8b4513;
+            --secondary-color: #d2b48c;
+            --background-light: #f5e8d3;
+            --background-dark: #e6ccb2;
+            --text-color: #333333;
+            --accent-color: #a0522d;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', Arial, sans-serif;
+            background-color: var(--background-light);
+            background-image: linear-gradient(to bottom right, var(--background-light), var(--background-dark));
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        #game-container {
+            max-width: 900px;
+            width: 100%;
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #cafe-view {
+            width: 100%;
+            height: 450px;
+            background-image: url('images/cafe-background.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+        
+        .decor-spot {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+        }
+        
+        #spot1 {
+            top: 50px;
+            left: 50px;
+        }
+        
+        #spot2 {
+            top: 50px;
+            left: 150px;
+        }
+        
+        #spot3 {
+            top: 150px;
+            left: 50px;
+        }
+        
+        #menu {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        #menu button {
+            padding: 12px 24px;
+            margin: 8px 6px;
+            background-color: var(--secondary-color);
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            font-size: 16px;
+            min-width: 120px;
+        }
+        
+        #menu button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        #status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 12px 15px;
+            background-color: #deb887;
+            background-image: linear-gradient(to right, #deb887, #d2b48c);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+        
+        #status-bar span {
+            margin: 5px 10px;
+        }
+        
+        #status-bar span span {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        #shop-panel,
+        #staff-panel,
+        #decor-panel,
+        #missions-panel,
+        #pending-orders-panel {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 300px;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            display: none;
+            z-index: 10;
+        }
+        
+        #permanent-mix-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            z-index: 20;
+        }
+        
+        #recipe-panel {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            width: 280px;
+            background-color: #fff;
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 30;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        
+        #recipe-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        #toggle-recipe-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 40;
+            padding: 8px 15px;
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        #toggle-recipe-button:hover {
+            background-color: #a0522d;
+            transform: translateY(-2px);
+        }
+        
+        #notification {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffeb3b;
+            color: #000;
+            padding: 10px 20px;
+            border: 1px solid #8b4513;
+            border-radius: 5px;
+            display: none;
+            z-index: 50;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        label {
+            margin-right: 10px;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+        }
+        
+        @keyframes makeDrink {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .making-drink {
+            animation: makeDrink 2s ease-in-out;
+        }
+        
+        @keyframes orderComplete {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+        
+        .order-complete {
+            animation: orderComplete 1s ease-out;
+        }
+        
+        @keyframes buttonClick {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .button-click {
+            animation: buttonClick 0.3s ease-in-out;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media screen and (max-width: 768px) {
+            #game-container {
+                padding: 5px;
+                max-width: 100vw;
+                width: 100vw;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            #cafe-view {
+                height: 220px;
+                min-height: 120px;
+                border-radius: 6px;
+            }
+            #menu {
+                flex-direction: column;
+                gap: 6px;
+                margin: 10px 0;
+            }
+            #menu button {
+                min-width: 90px;
+                font-size: 14px;
+                padding: 10px 0;
+                margin: 0 auto;
+                width: 90%;
+            }
+            #status-bar {
+                flex-direction: column;
+                padding: 8px 2px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+            .panel, #shop-panel, #staff-panel, #decor-panel, #missions-panel, #pending-orders-panel {
+                width: 96vw !important;
+                left: 2vw !important;
+                top: 10vw !important;
+                max-height: 80vh;
+                border-radius: 8px;
+                padding: 5px;
+            }
+            #permanent-mix-panel {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: 100vw;
+                border-radius: 10px 10px 0 0;
+                padding: 8px 2vw;
+                z-index: 30;
+            }
+            #recipe-panel {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 0 0 12px 12px;
+                padding: 10px 2vw;
+                z-index: 40;
+            }
+            #toggle-recipe-button {
+                top: 5px;
+                left: 5px;
+                font-size: 15px;
+                padding: 6px 10px;
+                border-radius: 6px;
+            }
+            #notification {
+                top: 5vw;
+                font-size: 15px;
+                padding: 8px 10px;
+                border-radius: 6px;
+                max-width: 95vw;
+            }
+            .ingredient-input-container {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            .ingredient-row label {
+                font-size: 14px;
+            }
+            .ingredient-row input {
+                width: 40px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <audio id="background-music" loop>
+        <source src="sounds/cafe-ambience.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="order-complete-sound">
+        <source src="sounds/order-complete.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="notification-sound">
+        <source src="sounds/notification.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="level-up-sound">
+        <source src="sounds/level-up.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="new-order-sound">
+        <source src="sounds/new-order.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="cash-sound">
+        <source src="sounds/cash.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="drink-making-sound">
+        <source src="sounds/drink-making.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="notification" aria-live="polite"></div>
+    <button id="toggle-recipe-button" onclick="toggleRecipePanel()">食譜</button>
+    <div id="recipe-panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-book"></i> 飲品食譜</h2>
+            <button class="close-button" onclick="toggleRecipePanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="recipe-search">
+            <input type="text" id="recipe-search-input" placeholder="搜尋飲品..." onkeyup="filterRecipes()">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div id="recipe-list"></div>
+    </div>
+
+    <div id="game-container">
+        <div id="status-bar">
+            <div class="status-row">
+                <span>等級: <span id="level">1</span></span>
+                <span>金錢: $<span id="money">100</span></span>
+                <span>聲望: <span id="reputation">0</span></span>
+                <span>訂單: <span id="orders">0</span></span>
+            </div>
+            <div class="status-row">
+                <div class="experience-container">
+                    <div class="experience-label">經驗值:</div>
+                    <div class="experience-bar-container">
+                        <div id="experience-bar-fill" class="experience-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <div id="experience-text" class="experience-text">0/100</div>
+                </div>
+            </div>
+            <div class="status-row">
+                <span>季節: <span id="current-season">春</span></span>
+                <span>日期: 第<span id="current-day">1</span>天</span>
+                <span>遊戲時間: <span id="play-time">00:00:00</span></span>
+            </div>
+        </div>
+
+        <div id="cafe-view">
+            <div id="spot1" class="decor-spot"></div>
+            <div id="spot2" class="decor-spot"></div>
+            <div id="spot3" class="decor-spot"></div>
+        </div>
+
+        <div id="menu">
+            <button onclick="togglePanel('shop-panel')">商店</button>
+            <button onclick="togglePanel('staff-panel')">員工</button>
+            <button onclick="togglePanel('decor-panel')">裝飾</button>
+            <button onclick="togglePanel('missions-panel')">任務</button>
+            <button onclick="togglePanel('pending-orders-panel')">訂單</button>
+            <button onclick="togglePanel('seasonal-panel')" class="seasonal-button">季節限定</button>
+            <button onclick="togglePanel('events-panel')" class="events-button">特殊事件</button>
+            <button onclick="togglePanel('stats-panel')">統計</button>
+            <button onclick="togglePanel('settings-panel')">設置</button>
+        </div>
+
+        <div id="shop-panel" class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-shopping-cart"></i> 商店</h3>
+                <button class="close-button" onclick="togglePanel('shop-panel')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="shop-items">
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <i class="fas fa-coffee"></i>
+                            <div class="shop-item-details">
+                                <h4>咖啡機</h4>
+                                <p>提高咖啡製作效率，每次製作多獎勵10%咖啡豪錦度</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('coffee-machine')" class="shop-button">購買 <span class="price">$500</span></button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <i class="fas fa-mug-hot"></i>
+                            <div class="shop-item-details">
+                                <h4>茶具組</h4>
+                                <p>解鎖茶類飲品制作，增加茶類飲品賣光20%</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('tea-set')" class="shop-button">購買 <span class="price">$300</span></button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <i class="fas fa-birthday-cake"></i>
+                            <div class="shop-item-details">
+                                <h4>甜點櫃</h4>
+                                <p>增加客戶停留時間，提高聲望值獲取速度</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('dessert-case')" class="shop-button">購買 <span class="price">$400</span></button>
+                    </div>
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <i class="fas fa-leaf"></i>
+                            <div class="shop-item-details">
+                                <h4>抹茶粉製造機</h4>
+                                <p>自動製作抹茶粉，每小時增加2單位抹茶粉</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('matcha-maker')" class="shop-button">購買 <span class="price">$600</span></button>
+                    </div>
+                </div>
+                
+                <div class="shop-category">
+                    <h4><i class="fas fa-box-open"></i> 購買原料</h4>
+                    <div class="ingredients-shop">
+                        <button onclick="buyIngredient('coffee', 5)" class="ingredient-buy-button">
+                            <i class="fas fa-coffee"></i> 咖啡豆 x5
+                            <span class="price">$25</span>
+                        </button>
+                        <button onclick="buyIngredient('milk', 5)" class="ingredient-buy-button">
+                            <i class="fas fa-prescription-bottle"></i> 牛奶 x5
+                            <span class="price">$15</span>
+                        </button>
+                        <button onclick="buyIngredient('sugar', 10)" class="ingredient-buy-button">
+                            <i class="fas fa-candy-cane"></i> 糖 x10
+                            <span class="price">$10</span>
+                        </button>
+                        <button onclick="buyIngredient('cocoa', 3)" class="ingredient-buy-button">
+                            <i class="fas fa-cookie"></i> 可可粉 x3
+                            <span class="price">$20</span>
+                        </button>
+                        <button onclick="buyIngredient('matcha', 2)" class="ingredient-buy-button">
+                            <i class="fas fa-leaf"></i> 抹茶粉 x2
+                            <span class="price">$30</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="staff-panel" class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-users"></i> 員工管理</h3>
+                <button class="close-button" onclick="togglePanel('staff-panel')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="staff-category">
+                    <h4><i class="fas fa-user-plus"></i> 可雇用人員</h4>
+                    <div class="staff-list">
+                        <div class="staff-item">
+                            <div class="staff-info">
+                                <div class="staff-avatar"><i class="fas fa-user-tie"></i></div>
+                                <div class="staff-details">
+                                    <h4>服務生</h4>
+                                    <p>提高顧客滿意度，每小時增加$20收入</p>
+                                </div>
+                            </div>
+                            <button onclick="hireStaff('waiter')" class="staff-button">僱用 <span class="price">$200/月</span></button>
+                        </div>
+                        <div class="staff-item">
+                            <div class="staff-info">
+                                <div class="staff-avatar"><i class="fas fa-user-graduate"></i></div>
+                                <div class="staff-details">
+                                    <h4>咖啡師</h4>
+                                    <p>每個訂單的飲品製作速度提高30%</p>
+                                </div>
+                            </div>
+                            <button onclick="hireStaff('barista')" class="staff-button">僱用 <span class="price">$250/月</span></button>
+                        </div>
+                        <div class="staff-item">
+                            <div class="staff-info">
+                                <div class="staff-avatar"><i class="fas fa-user-ninja"></i></div>
+                                <div class="staff-details">
+                                    <h4>經理</h4>
+                                    <p>每小時自動產生一個高級訂單，提高全體員工效率</p>
+                                </div>
+                            </div>
+                            <button onclick="hireStaff('manager')" class="staff-button">僱用 <span class="price">$500/月</span></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="staff-category current-staff-section">
+                    <h4><i class="fas fa-id-badge"></i> 目前員工</h4>
+                    <div id="current-staff-list" class="current-staff-list">
+                        <!-- 當前僱用的員工會動態顯示在這裡 -->
+                        <div class="empty-staff-message">還沒有僱用任何員工</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="decor-panel" class="panel">
+            <h3>裝飾品</h3>
+            <div class="decor-items">
+                <div class="decor-item">
+                    <span>盆栽</span>
+                    <button onclick="buyDecor('plant')">購買 ($100)</button>
+                </div>
+                <div class="decor-item">
+                    <span>畫作</span>
+                    <button onclick="buyDecor('painting')">購買 ($200)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="missions-panel" class="panel">
+            <h3>任務</h3>
+            <div id="mission-list"></div>
+        </div>
+
+        <div id="pending-orders-panel" class="panel">
+            <h3>待處理訂單</h3>
+            <div id="order-list"></div>
+        </div>
+
+        <div id="permanent-mix-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-mug-hot"></i> 調配工作台</h3>
+                <div class="current-order-badge">
+                    <i class="fas fa-coffee"></i>
+                    <span>當前訂單：<span id="permanent-required-drink">無</span></span>
+                </div>
+            </div>
+            
+            <div class="ingredient-status">
+                <div class="ingredient-status-item" title="咖啡">
+                    <i class="fas fa-coffee"></i>
+                    <span id="coffee-count">10</span>
+                </div>
+                <div class="ingredient-status-item" title="牛奶">
+                    <i class="fas fa-prescription-bottle"></i>
+                    <span id="milk-count">10</span>
+                </div>
+                <div class="ingredient-status-item" title="糖">
+                    <i class="fas fa-candy-cane"></i>
+                    <span id="sugar-count">10</span>
+                </div>
+                <div class="ingredient-status-item" title="可可粉">
+                    <i class="fas fa-cookie"></i>
+                    <span id="cocoa-count">5</span>
+                </div>
+                <div class="ingredient-status-item" title="冰塊">
+                    <i class="fas fa-cube"></i>
+                    <span id="ice-count">5</span>
+                </div>
+                <div class="ingredient-status-item" title="巧克力醬">
+                    <i class="fas fa-wine-bottle"></i>
+                    <span id="chocolate-syrup-count">5</span>
+                </div>
+                <div class="ingredient-status-item" title="抹茶粉">
+                    <i class="fas fa-leaf"></i>
+                    <span id="matcha-count">3</span>
+                </div>
+                <div class="ingredient-status-item" title="茶葉">
+                    <i class="fas fa-leaf"></i>
+                    <span id="tea-count">5</span>
+                </div>
+                <div class="ingredient-status-item" title="水果">
+                    <i class="fas fa-apple-alt"></i>
+                    <span id="fruit-count">5</span>
+                </div>
+            </div>
+            
+            <form id="permanent-mix-form">
+                <div class="ingredient-input-container">
+                    <div class="ingredient-row">
+                        <label for="permanent-coffee-input"><i class="fas fa-coffee"></i> 咖啡:</label>
+                        <input type="number" id="permanent-coffee-input" min="0" max="10" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-milk-input"><i class="fas fa-prescription-bottle"></i> 牛奶:</label>
+                        <input type="number" id="permanent-milk-input" min="0" max="10" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-sugar-input"><i class="fas fa-candy-cane"></i> 糖:</label>
+                        <input type="number" id="permanent-sugar-input" min="0" max="10" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-cocoa-input"><i class="fas fa-cookie"></i> 可可粉:</label>
+                        <input type="number" id="permanent-cocoa-input" min="0" max="5" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-ice-input"><i class="fas fa-cube"></i> 冰塊:</label>
+                        <input type="number" id="permanent-ice-input" min="0" max="5" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-chocolate-syrup-input"><i class="fas fa-wine-bottle"></i> 巧克力醬:</label>
+                        <input type="number" id="permanent-chocolate-syrup-input" min="0" max="5" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-matcha-input"><i class="fas fa-leaf"></i> 抹茶粉:</label>
+                        <input type="number" id="permanent-matcha-input" min="0" max="3" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-tea-input"><i class="fas fa-leaf"></i> 茶葉:</label>
+                        <input type="number" id="permanent-tea-input" min="0" max="5" value="0">
+                    </div>
+                    <div class="ingredient-row">
+                        <label for="permanent-fruit-input"><i class="fas fa-apple-alt"></i> 水果:</label>
+                        <input type="number" id="permanent-fruit-input" min="0" max="5" value="0">
+                    </div>
+                </div>
+                <button id="permanent-make-button" type="button" class="make-button">
+                    <i class="fas fa-blender"></i> 製作飲品
+                </button>
+            </form>
+        </div>
+
+        <div id="seasonal-panel" class="panel">
+            <div class="panel-header">
+                <h3>季節限定</h3>
+                <button class="close-button" onclick="togglePanel('seasonal-panel')">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="seasonal-info">
+                    <h4>當前季節效果</h4>
+                    <p id="season-effect"></p>
+                </div>
+                <div class="seasonal-menu">
+                    <h4>限定飲品</h4>
+                    <div id="seasonal-menu"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="events-panel" class="panel">
+            <div class="panel-header">
+                <h3>特殊事件</h3>
+                <button class="close-button" onclick="togglePanel('events-panel')">×</button>
+            </div>
+            <div class="panel-content">
+                <div id="active-events">
+                    <!-- 活動事件將動態添加在這裡 -->
+                </div>
+            </div>
+        </div>
+
+        <div id="stats-panel" class="panel">
+            <div class="panel-header">
+                <h3>遊戲統計</h3>
+                <button class="close-button" onclick="togglePanel('stats-panel')">×</button>
+            </div>
+            <div class="stats-content">
+                <div class="stats-section">
+                    <h4>基本統計</h4>
+                    <div class="stat-item">
+                        <span>製作飲品總數</span>
+                        <span id="total-drinks">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>總收入</span>
+                        <span id="total-earnings">$0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>服務顧客數</span>
+                        <span id="total-customers">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>平均滿意度</span>
+                        <span id="avg-satisfaction">100%</span>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h4>最佳紀錄</h4>
+                    <div class="stat-item">
+                        <span>最暢銷飲品</span>
+                        <span id="best-selling">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>單日最高收入</span>
+                        <span id="best-day-earnings">$0</span>
+                    </div>
+                </div>
+                <div class="stats-section">
+                    <h4>成就進度</h4>
+                    <div id="achievements-list">
+                        <!-- 成就會動態添加在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-panel" class="panel">
+            <div class="panel-header">
+                <h3>遊戲設置</h3>
+                <button class="close-button" onclick="togglePanel('settings-panel')">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="sound-enabled" checked>
+                        音效
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="music-enabled" checked>
+                        背景音樂
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="notifications-enabled" checked>
+                        通知提示
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="auto-save-enabled" checked>
+                        自動存檔
+                    </label>
+                </div>
+                <div class="setting-actions">
+                    <button onclick="GameState.save()">手動存檔</button>
+                    <button onclick="GameState.reset()" class="danger">重置遊戲</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game-functions.js" defer></script>
+    <script src="js/panel-functions.js" defer></script>
+    <script src="js/special-events.js" defer></script>
+    <script src="js/drink-maker.js" defer></script>
+    <script src="button-fix-new.js" defer></script>
+    <!-- 載入遊戲提示 -->
+    <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f5e8d3; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;">
+        <div style="font-family: 'Noto Serif TC', serif; font-size: 2.5rem; color: #8b4513; margin-bottom: 20px;">咖啡物語：夢想咖啡廳</div>
+        <div class="loader" style="width: 50px; height: 50px; border: 5px solid #d2b48c; border-top: 5px solid #8b4513; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div id="loading-tips" style="margin-top: 30px; text-align: center; width: 80%; max-width: 500px; font-style: italic; color: #8b4513;">載入中，請稍候...</div>
+    </div>
+
+    <script>
+        // 遊戲提示陣列
+        const gameTips = [
+            "提示：定期升級設備可以提高顧客滿意度。",
+            "提示：善用裝飾來增加店鋪的魅力值。",
+            "提示：特殊活動期間可以獲得額外的收益。",
+            "提示：優質的咖啡豆會讓你的飲品更受歡迎。",
+            "提示：雇用員工可以讓你的店鋪更有效率地運作。",
+            "提示：不同的顧客喜好不同類型的飲品，注意觀察！",
+            "提示：完成任務可以獲得特殊獎勵和聲望。"
+        ];
+        
+        // 隨機顯示提示
+        function showRandomTip() {
+            const tipElement = document.getElementById('loading-tips');
+            const randomTip = gameTips[Math.floor(Math.random() * gameTips.length)];
+            tipElement.textContent = randomTip;
+        }
+        
+        // 每3秒顯示一個新提示
+        let tipInterval = setInterval(showRandomTip, 3000);
+        showRandomTip(); // 顯示第一個提示
+        
+        // 頁面載入完成後隱藏載入畫面
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading-screen').style.opacity = '0';
+                document.getElementById('loading-screen').style.transition = 'opacity 0.5s ease';
+                
+                setTimeout(function() {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    clearInterval(tipInterval);
+                }, 500);
+            }, 1500); // 給1.5秒顯示載入畫面，讓玩家看到提示
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #111;
+}
+canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 1000px; /* 限制最大寬度 */
+    width: 100%; /* 響應式寬度 */
+    box-sizing: border-box; /* 確保 padding 和 border 不會增加總寬度 */
+}

@@ -1,0 +1,442 @@
+/* 主要遊戲樣式 */
+
+/* 全局樣式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    background-color: #111;
+    color: #fff;
+}
+
+/* 遊戲容器 */
+#game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.status-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 5px;
+    width: 250px;
+}
+
+.label {
+    width: 60px;
+    font-size: 14px;
+}
+
+.bar-bg {
+    flex-grow: 1;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+#health-bar .bar-fill {
+    background-color: #e74c3c;
+}
+
+#hunger-bar .bar-fill {
+    background-color: #f39c12;
+}
+
+#thirst-bar .bar-fill {
+    background-color: #3498db;
+}
+
+.value {
+    width: 60px;
+    font-size: 12px;
+    text-align: right;
+}
+
+.game-info {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* 物品欄 */
+#inventory {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #34495e;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 100;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+}
+
+/* 合成面板 */
+#crafting-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #34495e;
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 110;
+    width: 500px;
+    max-width: 90%;
+}
+
+#crafting-panel h2 {
+    color: #3498db;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.crafting-categories {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.category-btn {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.category-btn:hover {
+    background-color: #34495e;
+}
+
+.category-btn.active {
+    background-color: #3498db;
+}
+
+.crafting-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.crafting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid #34495e;
+    padding-top: 15px;
+}
+
+.crafting-details {
+    font-size: 14px;
+}
+
+.recipe-name {
+    font-weight: bold;
+    color: #f1c40f;
+    margin-bottom: 5px;
+}
+
+.recipe-requirements {
+    color: #bdc3c7;
+}
+
+#craft-button {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#craft-button:hover:not([disabled]) {
+    background-color: #27ae60;
+}
+
+#craft-button[disabled] {
+    background-color: #7f8c8d;
+    cursor: not-allowed;
+}
+
+/* 地圖 */
+#map-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #34495e;
+    border-radius: 10px;
+    padding: 5px;
+    z-index: 100;
+}
+
+#map-canvas {
+    width: 200px;
+    height: 200px;
+    border-radius: 5px;
+}
+
+/* 設置面板 */
+#settings-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #34495e;
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 120;
+    width: 400px;
+    max-width: 90%;
+}
+
+#settings-panel h2 {
+    color: #3498db;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.setting-item label {
+    font-size: 14px;
+    color: #bdc3c7;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #2c3e50;
+    border-radius: 5px;
+    outline: none;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+}
+
+.setting-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.settings-button {
+    flex: 1;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 10px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.settings-button:hover {
+    background-color: #34495e;
+}
+
+.settings-button.primary {
+    background-color: #2ecc71;
+}
+
+.settings-button.primary:hover {
+    background-color: #27ae60;
+}
+
+.settings-button.danger {
+    background-color: #e74c3c;
+}
+
+.settings-button.danger:hover {
+    background-color: #c0392b;
+}
+
+/* 通用樣式 */
+.hidden {
+    display: none !important;
+}
+
+/* 載入畫面 */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0f0f0f;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-container {
+    text-align: center;
+}
+
+.loading-container h2 {
+    color: #3498db;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+#loading-progress-container {
+    width: 300px;
+    height: 20px;
+    background-color: #2c3e50;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+#loading-progress {
+    height: 100%;
+    width: 0%;
+    background-color: #2ecc71;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+#loading-text {
+    color: #bdc3c7;
+    font-size: 14px;
+}
+
+/* 快速按鈕 */
+.quick-buttons {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+}
+
+.quick-buttons button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #34495e;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.quick-buttons button:hover {
+    transform: scale(1.1);
+    background-color: rgba(52, 152, 219, 0.7);
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .status-bar {
+        width: 200px;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .crafting-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .status-bar {
+        width: 150px;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .crafting-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    #map-canvas {
+        width: 150px;
+        height: 150px;
+    }
+}

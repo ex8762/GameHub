@@ -1,0 +1,506 @@
+body {
+    font-family: 'Noto Sans TC', Arial, sans-serif;
+    background-color: #f5e8d3;
+    background-image: linear-gradient(to bottom right, #f5e8d3, #e6ccb2);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    color: #5a3921;
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background-color 0.5s ease;
+}
+#game-container {
+    max-width: 950px;
+    width: 95%;
+    margin: auto;
+    padding: 25px;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(139, 69, 19, 0.25);
+    transition: all 0.3s ease;
+    position: relative;
+}
+#cafe-view {
+    width: 100%;
+    height: 450px;
+    background-image: url('images/cafe-background.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    border: 2px solid #8b4513;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2), inset 0 0 50px rgba(255,255,255,0.1);
+    transition: all 0.5s ease;
+    overflow: hidden;
+}
+.decor-spot {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+}
+#spot1 { top: 50px; left: 50px; }
+#spot2 { top: 50px; left: 150px; }
+#spot3 { top: 150px; left: 50px; }
+#menu {
+    text-align: center;
+    margin: 25px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+#menu button {
+    padding: 12px 24px;
+    margin: 0 5px;
+    background-color: #d2b48c;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(139, 69, 19, 0.15);
+    color: #5a3921;
+    font-size: 15px;
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+#menu button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: 0.5s;
+}
+
+#menu button:hover {
+    background-color: #8b4513;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(139, 69, 19, 0.2);
+}
+
+#menu button:hover::before {
+    left: 100%;
+}
+
+#menu button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(139, 69, 19, 0.15);
+}
+#status-bar {
+    text-align: center;
+    padding: 15px;
+    background-color: #f0e6d2;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(139, 69, 19, 0.1);
+    border: 1px solid #d2b48c;
+    position: relative;
+    overflow: hidden;
+}
+
+#status-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8b4513, #d2b48c, #8b4513);
+    animation: statusBarGlow 3s infinite linear;
+}
+
+@keyframes statusBarGlow {
+    0% { background-position: 0% 0; }
+    100% { background-position: 100% 0; }
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 8px 0;
+    flex-wrap: wrap;
+}
+
+.status-row span {
+    margin: 0 10px;
+    font-weight: 500;
+}
+
+.experience-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.experience-label {
+    font-weight: bold;
+    margin-bottom: 3px;
+    color: #8b4513;
+}
+/* 各面板共用樣式 */
+.panel {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 380px;
+    background-color: #ffffff;
+    padding: 0;
+    border: 2px solid #8b4513;
+    border-radius: 12px;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.panel-content {
+    padding: 15px;
+}
+
+/* 滾動條樣式 */
+.panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.panel::-webkit-scrollbar-track {
+    background-color: #f5e8d3;
+    border-radius: 10px;
+}
+
+.panel::-webkit-scrollbar-thumb {
+    background-color: #d2b48c;
+    border-radius: 10px;
+}
+
+.panel::-webkit-scrollbar-thumb:hover {
+    background-color: #8b4513;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #8b4513;
+    color: #fff;
+}
+
+.panel-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-header i {
+    font-size: 1rem;
+}
+
+.panel-header h2 {
+    margin: 0;
+    color: #8b4513;
+    font-size: 1.3rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.close-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* 常駐調配飲品介面：固定在右下角 */
+#permanent-mix-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    background-color: #ffffff;
+    padding: 0;
+    border: 2px solid #8b4513;
+    border-radius: 12px;
+    z-index: 20;
+    box-shadow: 0 5px 25px rgba(139, 69, 19, 0.25);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#permanent-mix-panel .panel-header {
+    background-color: #8b4513;
+    color: #fff;
+    padding: 12px 15px;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#permanent-mix-panel .panel-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#permanent-mix-panel .panel-header h3 i {
+    font-size: 1.1rem;
+}
+
+.current-order-badge {
+    background-color: #f0e6d2;
+    color: #8b4513;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.ingredient-input-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.ingredient-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ingredient-row label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.ingredient-row input {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid #d2b48c;
+    border-radius: 5px;
+    text-align: center;
+}
+/* 食譜面板：置於畫面左上角 */
+#recipe-panel {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 320px;
+    background-color: #fff;
+    border: 2px solid #8b4513;
+    border-radius: 15px;
+    padding: 20px;
+    z-index: 30;
+    max-height: 500px; /* 限制高度 */
+    overflow-y: auto; /* 啟用滾動 */
+    box-shadow: 0 8px 25px rgba(139, 69, 19, 0.3);
+    display: none;
+    animation: slideIn 0.4s ease-out;
+}
+
+#recipe-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#recipe-panel::-webkit-scrollbar-track {
+    background: #f5e8d3;
+    border-radius: 10px;
+}
+
+#recipe-panel::-webkit-scrollbar-thumb {
+    background: #d2b48c;
+    border-radius: 10px;
+}
+
+#recipe-panel::-webkit-scrollbar-thumb:hover {
+    background: #8b4513;
+}
+
+#recipe-list {
+    padding: 0;
+    margin: 10px 0 0 0;
+    list-style-type: none;
+}
+
+#recipe-panel h3 {
+    color: #8b4513;
+    border-bottom: 2px solid #d2b48c;
+    padding-bottom: 8px;
+    margin: 15px 0 10px 0;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+/* 食譜按鈕固定於左上角 */
+#toggle-recipe-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 40;
+    padding: 8px 15px;
+    background-color: #8b4513;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+#toggle-recipe-button:hover {
+    background-color: #a0522d;
+    transform: translateY(-2px);
+}
+
+/* 提示訊息區塊，顯示於畫面上方中央 */
+#notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #5a3921;
+    padding: 12px 25px;
+    border-left: 4px solid #8b4513;
+    border-radius: 8px;
+    display: none;
+    z-index: 50;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    font-weight: 500;
+    max-width: 80%;
+    text-align: center;
+    animation: notification-appear 0.3s ease-out;
+}
+
+@keyframes notification-appear {
+    0% { transform: translate(-50%, -20px); opacity: 0; }
+    100% { transform: translate(-50%, 0); opacity: 1; }
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+label {
+    margin-right: 10px;
+}
+input[type="number"] {
+    width: 60px;
+    padding: 5px;
+}
+/* 飲品製作動畫 */
+@keyframes makeDrink {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.making-drink {
+    animation: makeDrink 2s ease-in-out;
+}
+/* 新增：訂單完成動畫 */
+@keyframes orderComplete {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-50px); }
+}
+.order-complete {
+    animation: orderComplete 1s ease-out;
+}
+
+/* 新增：按鈕點擊動畫 */
+@keyframes buttonClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+.button-click {
+    animation: buttonClick 0.3s ease-in-out;
+}
+
+/* 來自 styles.css：僅合併未重複的部分 */
+#menu-panel {
+    grid-column: 2;
+    grid-row: 1;
+    background-color: #BCAAA4;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#customer-panel {
+    grid-column: 1;
+    grid-row: 2;
+    background-color: #A1887F;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#stats-panel {
+    grid-column: 2;
+    grid-row: 2;
+    background-color: #8D6E63;
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#money, #reputation {
+    font-size: 1.2em;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+/* 來自 styles.css 結束 */
