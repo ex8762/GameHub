@@ -10,9 +10,10 @@
     <title>遊戲統計面板 - 管理員專用</title>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/css/loading-spinner.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" integrity="sha256-Y26AMvaIfrZ1EQU49pf6H4QzVTrOI8m9wQYKkftBt4s=" crossorigin="anonymous"></script>
+    <!-- 移除integrity屬性以避免CSP錯誤 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js" crossorigin="anonymous"></script>
     <style>
          :root {
             --primary-color: #2196f3;
@@ -661,17 +662,20 @@
         操作成功完成！
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 修正Chart.js引用，添加crossorigin屬性 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
     <script src="assets/js/debug-helper.js"></script>
     <script src="assets/js/error-handler.js"></script>
     <script src="assets/js/resource-monitor.js"></script>
     <script src="assets/js/admin.js"></script>
-    <script src="assets/js/analytics.js"></script>
+    <!-- 移除Google Analytics以解決CSP問題 -->
+    <!-- <script src="assets/js/analytics.js"></script> -->
     <script>
-        // 註冊 Service Worker
+        // 註冊 Service Worker - 修正路徑問題
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/assets/js/service-worker.js')
+                // 使用相對路徑而非絕對路徑
+                navigator.serviceWorker.register('./service-worker.js')
                     .then(registration => {
                         console.log('Service Worker 註冊成功，範圍：', registration.scope);
                         if (typeof addErrorLog === 'function') {

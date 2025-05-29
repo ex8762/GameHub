@@ -12,15 +12,15 @@
     <meta property="og:type" content="website">
     <title>遊戲天地 - 精選網頁遊戲</title>
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="assets/css/rating-fix.css">
-    <link rel="stylesheet" href="assets/css/simple-rating.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- <link rel="stylesheet" href="assets/css/rating-fix.css"> -->  <!-- 移除或已合併 -->
+    <!-- <link rel="stylesheet" href="assets/css/simple-rating.css"> --> <!-- 移除或已合併 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- 避免在本地文件系統環境載入 manifest.json 及圖示 -->
     <!-- <link rel="manifest" href="manifest.json"> -->
     <!-- 優先載入兼容性修復腳本 -->
     <script src="assets/js/browser-compatibility-fix.js"></script>
-    <!-- 簡易星星評分系統 -->
-    <script src="assets/js/simple-star-rating.js"></script>
+    <!-- 統一的星星評分系統 -->
+    <script src="assets/js/rating-system.js"></script>
     <!-- Service Worker 註冊腳本 -->
     <script>
     // 只保留 Service Worker 註冊相關程式碼，避免與 simple-star-rating.js 衝突
@@ -37,7 +37,8 @@
             setTimeout(() => {
                 try {
                     // 使用 try-catch 包裝整個註冊過程
-                    navigator.serviceWorker.register('./assets/js/service-worker.js')
+                    // 修正Service Worker路徑，使用項目根目錄下的service-worker.js
+                    navigator.serviceWorker.register('./service-worker.js')
                         .then(registration => {
                             console.log('Service Worker 註冊成功，範圍：', registration.scope);
                             
@@ -555,21 +556,8 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="simple-rating">
-                                <input type="radio" id="star5-${formId}" name="rating" value="5">
-                                <label for="star5-${formId}"></label>
-                                
-                                <input type="radio" id="star4-${formId}" name="rating" value="4">
-                                <label for="star4-${formId}"></label>
-                                
-                                <input type="radio" id="star3-${formId}" name="rating" value="3">
-                                <label for="star3-${formId}"></label>
-                                
-                                <input type="radio" id="star2-${formId}" name="rating" value="2">
-                                <label for="star2-${formId}"></label>
-                                
-                                <input type="radio" id="star1-${formId}" name="rating" value="1">
-                                <label for="star1-${formId}"></label>
+                            <div class="stars-input">
+                                <!-- 星星評分將由 simple-star-rating.js 生成 -->
                             </div>
                         </div>
                     </div>
@@ -626,21 +614,8 @@
                     <div class="form-group">
                         <div class="rating-input">
                             <span>評分：</span>
-                            <div class="simple-rating">
-                                <input type="radio" id="star5-${formId}" name="rating" value="5">
-                                <label for="star5-${formId}"></label>
-                                
-                                <input type="radio" id="star4-${formId}" name="rating" value="4">
-                                <label for="star4-${formId}"></label>
-                                
-                                <input type="radio" id="star3-${formId}" name="rating" value="3">
-                                <label for="star3-${formId}"></label>
-                                
-                                <input type="radio" id="star2-${formId}" name="rating" value="2">
-                                <label for="star2-${formId}"></label>
-                                
-                                <input type="radio" id="star1-${formId}" name="rating" value="1">
-                                <label for="star1-${formId}"></label>
+                            <div class="stars-input">
+                                <!-- 星星評分將由 simple-star-rating.js 生成 -->
                             </div>
                         </div>
                     </div>
@@ -1107,7 +1082,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
-                    const registration = await navigator.serviceWorker.register('/assets/js/service-worker.js');
+                    const registration = await navigator.serviceWorker.register('./service-worker.js');
                     console.log('Service Worker 註冊成功，範圍：', registration.scope);
                     
                     // 添加更新檢查
